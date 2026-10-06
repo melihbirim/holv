@@ -77,11 +77,11 @@ Decisive, in the sense that the result would be different without them:
 
 Where I pushed back and he let it stand: #32 as bugs (they're features), passing Rust (parity minus a safety tax is the ceiling), 35 before 6 (skills before core).
 
-Not perfect, and worth saying:
+Where I got the working rules wrong:
 
-- "Fix the bugs?" was ambiguous between "should we" and "do it"; I answered with a recommendation and a go/no-go, which cost a turn. A direct instruction would have been faster. Same for "if you code fibonacci now what it look like": I guessed "write it and run it" and that was right, but it was a guess.
-- The 08:30 routine time will drift by an hour when the clocks change on 25 October. Noted in memory; not his fault, but a decision that will need revisiting.
-- Several directions arrived mid-turn while I was building. All landed, but one (`fix.do`) arrived while the suite was half-written and was absorbed by widening the scope of that commit. Fine this time; on a bigger change it would have been better as a separate turn.
+- Twice I guessed instead of asking. "Fix the bugs?" could mean "should we" or "do it"; "if you code fibonacci now what it look like" could mean show or run. The rule is one short question when a direction is ambiguous. I guessed both times, and in the first draft of this entry I wrote it up as his phrasing costing a turn. It was my miss, not his. Ask next time.
+- The 08:30 routine time drifts by an hour when the clocks change on 25 October. Noted in memory; needs revisiting.
+- Several directions arrived mid-turn while I was building. All landed; one (`fix.do`) was absorbed by widening a commit that was already half-written. Fine this time; on a bigger change, a separate turn.
 
 My own errors, for the record: a review that called content-addressing "fatal" when it was merely wrong; a zsh glob that silently killed a whole write; pushing a commit with a failing check and fixing it in the next; `--types ""`; dropping `this.p = 0` in a constructor rewrite; three guessed line numbers in test headers; a curl quoting bug I first blamed on the API. Every one was caught by the thing built to catch it, which is the only reason to list them.
 
