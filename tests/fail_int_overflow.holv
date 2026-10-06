@@ -1,8 +1,11 @@
 holv 0
+
 -- expect: run-fail IntOverflow
+-- args: 20
 fn main(n: Int) -> Int {
   var x = 1
-  for i in 0 .. n { x = x * 10 }
+  for i in 0 .. n {
+    x = x * 10
+  }
   x
 }
--- args: 20

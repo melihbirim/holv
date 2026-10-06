@@ -1,6 +1,8 @@
 holv 0
+
 -- expect: run-fail no implementation for cap Net
 cap Net { get(url: String): String }
+
 fn main(net: Net) -> Int
   effects Net
 {

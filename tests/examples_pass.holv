@@ -1,6 +1,8 @@
 holv 0
+
 -- expect: examples
 type Post { id: Int, up: Int, down: Int, created: Int }
+
 fn score(p: Post, now: Int) -> Float
   example score(Post { id: 1, up: 10, down: 0, created: 0 }, 7200) == 1.25
   example score(Post { id: 1, up: 0, down: 0, created: 0 }, 7200) == 0.0

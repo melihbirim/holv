@@ -20,7 +20,7 @@ const holvc = (args, extraEnv = {}) => spawnSync(process.execPath, [HOLVC, ...ar
 
 function header(src) {
   const h = { expect: null, args: [] };
-  for (const line of src.split("\n").slice(0, 10)) {
+  for (const line of src.split("\n")) {
     const m = line.match(/^-- (expect|args): (.*)$/);
     if (!m) continue;
     if (m[1] === "args") h.args = m[2].trim().split(/\s+/);

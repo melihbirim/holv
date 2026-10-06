@@ -1,13 +1,18 @@
 holv 0
+
 -- expect: run => 1700000000
 cap Clock { now(): Int }
+
 cap Out { print(s: String): Unit }
+
 fn now(clock: Clock) -> Int
   effects Clock
 { clock.now() }
+
 fn show(clock: Clock, out: Out) -> Unit
   effects Clock, Out
 { out.print(str(now(clock))) }
+
 fn main(clock: Clock, out: Out) -> Int
   effects Clock, Out
 {

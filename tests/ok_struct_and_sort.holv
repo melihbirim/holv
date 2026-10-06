@@ -1,7 +1,10 @@
 holv 0
+
 -- expect: run => c b a
 type Item { name: String, rank: Int }
+
 cap Out { print(s: String): Unit }
+
 fn main(out: Out) -> Int
   effects Out
 {

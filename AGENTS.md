@@ -19,7 +19,7 @@ The loop. Do not skip steps, do not reorder them.
 3. `./holvc.mjs run f.holv args`. The program runs until the first hole and stops with exit 3 and the scope as JSON. Read the scope. That is real data from the real program; use it to write the next body.
 4. Fill one hole. Go to 2.
 5. When no holes remain: `./holvc.mjs test f.holv` (examples), then `./holvc.mjs run f.holv --simulate` and read the effect log before running for real.
-6. `./holvc.mjs fmt f.holv --write`.
+6. `./holvc.mjs fmt f.holv --write`. CI runs `fmt --check` on every committed program; a non-canonical file fails the build with F001.
 
 Never claim a program works without pasting the output of step 5. The user has been told to ask for it.
 

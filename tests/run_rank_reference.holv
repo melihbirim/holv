@@ -1,13 +1,16 @@
 holv 0
+
 -- expect: run => top 8 5 1\nchecksum 2588239
 -- args: 10
 -- Hot-score ranking. Pure core; clock, randomness and stdout are capabilities the driver passes in.
-
 type Post { id: Int, up: Int, down: Int, created: Int }
+
 type Scored { id: Int, score: Float }
 
 cap Clock { now(): Int }
+
 cap Rng { next(): Int }
+
 cap Out { print(s: String): Unit }
 
 fn score(p: Post, now: Int) -> Float
@@ -37,9 +40,7 @@ fn rank(posts: List<Post>, now: Int) -> List<Scored> {
     scored.push(Scored { id: p.id, score: score(p, now) })
   }
   -- descending score, ascending id on ties
-  scored.sortBy(fn(a, b) {
-    if a.score != b.score { if b.score > a.score { 1 } else { -1 } } else { a.id - b.id }
-  })
+  scored.sortBy(fn(a, b) { if a.score != b.score { if b.score > a.score { 1 } else { -1 } } else { a.id - b.id } })
   scored
 }
 

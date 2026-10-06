@@ -1,6 +1,8 @@
 holv 0
+
 -- expect: run => 9007199254740991 -9007199254740991 3
 cap Out { print(s: String): Unit }
+
 fn main(out: Out) -> Int
   effects Out
 {

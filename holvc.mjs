@@ -573,7 +573,7 @@ function compile(file) {
   const { toks, comments } = lex(src);
   const items = new Parser(toks).program();
   const errors = [...new Checker(items).run(), ...checkEffects(items)];
-  return { items, comments, errors };
+  return { items, comments, errors, src };
 }
 function report(file, errors) {
   for (const e of errors) console.error(JSON.stringify({ file, ...e.toJSON() }));
@@ -640,7 +640,7 @@ function tsDriver(items, name, srcName) {
     const args = (main?.params ?? []).map((p) => {
       if (caps.has(p.type.name)) return `caps.get(${JSON.stringify(p.type.name)}) as prog.${p.type.name}`;
       const i = argi++;
-      if (p.type.name === "Int" || p.type.name === "Float") return `Number(args[${i}] ?? (() => { throw new Error("missing argument ${p.name}: ${p.type.name}"); })())`;
+      if (p.type.name === "Int" || p.type.name === "Float") return `Number(args[${i}] ?? (() => { throw new RuntimeError("MissingArgument", "missing argument ${p.name}: ${p.type.name}", "pass it on the command line: holvc run <file> ${main.params.filter((q) => !caps.has(q.type.name)).map((q) => `<${q.name}>`).join(" ")}"); })())`;
       if (p.type.name === "String") return `String(args[${i}] ?? "")`;
       if (p.type.name === "Bool") return `args[${i}] === "true"`;
       throw new HolvError("E060", p.line, p.col, `main parameter ${p.name} must be a cap, Int, Float, String or Bool`, `change the type of ${p.name}: the driver can only supply capabilities and command-line scalars; build the ${p.type.name} inside main`);
@@ -675,7 +675,7 @@ const [, , cmd, file, ...rawRest] = process.argv;
 const flag = (name) => { const i = rawRest.indexOf(name); return i >= 0 ? rawRest[i + 1] : undefined; };
 const capsOpt = flag("--caps"), targetOpt = flag("--target");
 const rest = rawRest.filter((a, i) => !(["--caps", "--target"].includes(a) || ["--caps", "--target"].includes(rawRest[i - 1])));
-const usage = "usage: holvc check|build|run|test|fmt <file.holv> [args] [--caps file.ts] [--target ts] [--simulate] | holvc spec";
+const usage = "usage: holvc check|build|run|test <file.holv> [args] [--caps file.ts] [--target ts] [--simulate] | holvc fmt <file.holv> [--write|--check] | holvc spec";
 try {
   if (cmd === "spec") process.stdout.write(fs.readFileSync(path.join(HERE, "spec.md"), "utf8"));
   else if (!file) { console.error(usage); process.exit(2); }
@@ -684,9 +684,13 @@ try {
   else if (cmd === "run") { const b = build(file, { caps: capsOpt, target: targetOpt }); if (!b.hasMain) { console.error(JSON.stringify({ file, code: "E061", msg: "no fn main", fix: { do: "add fn main(...) -> Int; its parameters may be caps and Int, Float, String or Bool" } })); process.exit(1); } b.be.run(b.outDir, b.name, rest, b.capsFile ? { HOLV_CAPS: b.capsFile } : {}); }
   else if (cmd === "test") { const b = build(file, { target: targetOpt }); b.be.run(b.outDir, b.name, [], { HOLV_TEST: "1" }); }
   else if (cmd === "fmt") {
-    const { items, comments } = compile(file); // fmt only needs a parse; type errors are reported by check
+    const { items, comments, src } = compile(file); // fmt only needs a parse; type errors are reported by check
     const text = format(items, comments);
-    if (rest.includes("--write")) fs.writeFileSync(file, text); else process.stdout.write(text);
+    if (rest.includes("--check")) {
+      if (text === src) console.log(JSON.stringify({ ok: true, file, canonical: true }));
+      else { console.error(JSON.stringify({ file, code: "F001", msg: "not in canonical form", fix: { do: `run: holvc fmt --write ${file}` } })); process.exit(1); }
+    }
+    else if (rest.includes("--write")) fs.writeFileSync(file, text); else process.stdout.write(text);
   }
   else { console.error(usage); process.exit(2); }
 } catch (e) {

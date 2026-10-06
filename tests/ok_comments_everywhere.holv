@@ -1,4 +1,5 @@
 holv 0
+
 -- expect: run => 2
 -- comments before items, inside blocks and before the tail must survive fmt
 cap Out { print(s: String): Unit }

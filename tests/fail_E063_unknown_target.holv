@@ -1,4 +1,5 @@
 holv 0
+
 -- expect: run-fail E063
 -- args: --target zig
 fn main() -> Int { 0 }

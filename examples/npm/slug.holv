@@ -1,14 +1,13 @@
 holv 0
--- An npm package behind a capability. The program never imports anything; it declares what it needs.
 
+-- An npm package behind a capability. The program never imports anything; it declares what it needs.
 cap Slug { slugify(s: String): String }
+
 cap Out { print(s: String): Unit }
 
 fn postPath(slug: Slug, title: String) -> String
   effects Slug
-{
-  "/posts/" + slug.slugify(title)
-}
+{ "/posts/" + slug.slugify(title) }
 
 fn main(slug: Slug, out: Out, title: String) -> Int
   effects Slug, Out

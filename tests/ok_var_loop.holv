@@ -1,7 +1,9 @@
 holv 0
+
 -- expect: run => 55
 -- args: 10
 cap Out { print(s: String): Unit }
+
 fn sumTo(n: Int) -> Int
   example sumTo(10) == 55
   example sumTo(0) == 0
@@ -12,6 +14,7 @@ fn sumTo(n: Int) -> Int
   }
   total
 }
+
 fn main(out: Out, n: Int) -> Int
   effects Out
 {
