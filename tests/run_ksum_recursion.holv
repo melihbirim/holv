@@ -1,0 +1,70 @@
+holv 0
+-- expect: run => 2 groups\n-1 -1 2\n-1 0 1
+-- args: 3 0
+
+-- k-sum: all unique groups of k numbers from xs that add up to target.
+-- Sort, then recurse: fix one element, solve (k-1)-sum on the rest; k = 2 is two pointers.
+cap Out { print(s: String): Unit }
+
+-- a new list equal to xs with v appended; holv has no copy builtin and push mutates
+fn copyWith(xs: List<Int>, v: Int) -> List<Int>
+  example copyWith(List.new(), 7).len == 1
+  example copyWith(List.new(), 7)[0] == 7
+{
+  let ys: List<Int> = List.new()
+  for i in 0 .. xs.len { ys.push(xs[i]) }
+  ys.push(v)
+  ys
+}
+
+-- first index above i whose value differs from xs[i]
+fn nextUp(xs: List<Int>, i: Int) -> Int { if i + 1 < xs.len and xs[i + 1] == xs[i] { nextUp(xs, i + 1) } else { i + 1 } }
+
+-- first index below i whose value differs from xs[i]
+fn nextDown(xs: List<Int>, i: Int) -> Int { if i - 1 >= 0 and xs[i - 1] == xs[i] { nextDown(xs, i - 1) } else { i - 1 } }
+
+-- two pointers as recursion: holv has no while loop
+fn twoSum(xs: List<Int>, lo: Int, hi: Int, target: Int, prefix: List<Int>, out: List<List<Int>>) -> Unit { if lo >= hi {
+} else {
+  let sum = xs[lo] + xs[hi]
+  if sum == target {
+    out.push(copyWith(copyWith(prefix, xs[lo]), xs[hi]))
+    twoSum(xs, nextUp(xs, lo), nextDown(xs, hi), target, prefix, out)
+  } else { if sum < target { twoSum(xs, lo + 1, hi, target, prefix, out) } else { twoSum(xs, lo, hi - 1, target, prefix, out) } }
+} }
+
+fn kSum(xs: List<Int>, start: Int, k: Int, target: Int, prefix: List<Int>, out: List<List<Int>>) -> Unit {
+  if k == 2 { twoSum(xs, start, xs.len - 1, target, prefix, out) } else {
+    for i in start .. xs.len - k + 2 {
+      -- same value as the previous candidate at this depth gives the same groups; skip it
+      if i > start and xs[i] == xs[i - 1] {
+      } else { kSum(xs, i + 1, k - 1, target - xs[i], copyWith(prefix, xs[i]), out) }
+    }
+  }
+}
+
+fn show(group: List<Int>) -> String {
+  var s = ""
+  for i in 0 .. group.len {
+    s = s + if i == 0 { "" } else { " " } + str(group[i])
+  }
+  s
+}
+
+fn main(out: Out, k: Int, target: Int) -> Int
+  effects Out
+{
+  let xs: List<Int> = List.new()
+  xs.push(-1)
+  xs.push(0)
+  xs.push(1)
+  xs.push(2)
+  xs.push(-1)
+  xs.push(-4)
+  xs.sortBy(fn(a, b) { a - b })
+  let groups: List<List<Int>> = List.new()
+  kSum(xs, 0, k, target, List.new(), groups)
+  out.print(str(groups.len) + " groups")
+  for i in 0 .. groups.len { out.print(show(groups[i])) }
+  0
+}

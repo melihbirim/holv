@@ -37,7 +37,7 @@ for i in 0 .. n { ... }    -- i is Int, end exclusive
 
 ## Expressions
 Literals `1` `1.5` `"s"` `true`. Operators by precedence: `or` `and` `== !=` `< <= > >=` `+ -` `* / div mod`. Unary `-x` `not b`.
-`if c { a } else { b }` is an expression; both branches same type.
+`if c { a } else { b }` is an expression; both branches same type. There is no `if` without `else`; an empty block `{ }` is `Unit`, so a statement-if is `if c { ... } else { }`. There is no `while`; loop with `for` or recurse (fns may call themselves).
 `Post { id: 1, up: 2, created: 0 }` struct literal, all fields required.
 `xs[i]` (out of range stops the program) `xs.len` `xs.push(v)` `xs.sortBy(fn(a, b) { ... })` comparator returns Int.
 Builtins: `sqrt(Float) -> Float` `floor(Float) -> Int` `toFloat(Int) -> Float` `str(x) -> String`.

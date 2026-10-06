@@ -50,7 +50,7 @@ fn main(clock: Clock, out: Out, n: Int) -> Int
 }
 ```
 
-Full program with sorting, mutation and a capability for randomness: [examples/rank.holv](examples/rank.holv). An npm package wrapped as a capability, which is the only way foreign code enters: [examples/npm/slug.holv](examples/npm/slug.holv) using the reviewed wrapper in [caps/slugify](caps/slugify).
+Full program with sorting, mutation and a capability for randomness: [examples/rank.holv](examples/rank.holv). Recursion, nested lists and typed holes, written with the loop: [examples/ksum.holv](examples/ksum.holv). An npm package wrapped as a capability, which is the only way foreign code enters: [examples/npm/slug.holv](examples/npm/slug.holv) using the reviewed wrapper in [caps/slugify](caps/slugify).
 
 ## Use
 
