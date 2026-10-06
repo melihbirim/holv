@@ -32,7 +32,7 @@ export function runExamples(exs: Array<[string, () => unknown, unknown]>): boole
 
 // Each entry gives a real implementation and a dry one. Dry impls never touch the world.
 // HOLV_NOW and HOLV_SEED pin the clock and rng for reproducible runs.
-type Impl = { real: () => object; dry: () => object };
+export type Impl = { real: () => object; dry: () => object };
 const registry: Record<string, Impl> = {
   Clock: {
     real: () => ({ now: () => (process.env.HOLV_NOW ? Number(process.env.HOLV_NOW) : Math.floor(Date.now() / 1000)) }),
@@ -55,10 +55,12 @@ function lcg(seed: number) {
 export class Caps {
   private log: Array<{ effect: string; args: unknown[]; result?: unknown }> = [];
   private simulate: boolean;
-  constructor(simulate: boolean) { this.simulate = simulate; }
+  private table: Record<string, Impl>;
+  // `extra` comes from --caps file.ts: a module whose default export maps cap names to { real, dry }.
+  constructor(simulate: boolean, extra: Record<string, Impl> = {}) { this.simulate = simulate; this.table = { ...registry, ...extra }; }
   get(name: string): object {
-    const impl = registry[name];
-    if (!impl) throw new Error(`no implementation for cap ${name}; add it to runtime.ts registry`);
+    const impl = this.table[name];
+    if (!impl) throw new Error(`no implementation for cap ${name}; provide one with --caps file.ts`);
     const target = this.simulate ? impl.dry() : impl.real();
     if (!this.simulate) return target;
     const log = this.log;

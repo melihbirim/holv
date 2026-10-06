@@ -562,6 +562,7 @@ function findTsc() {
   return w.status === 0 ? w.stdout.trim() : null;
 }
 function build(file, opts = {}) {
+  const capsFile = opts.caps ? path.resolve(opts.caps) : null;
   const { items, errors } = compile(file);
   if (!report(file, errors)) process.exit(1);
   const name = path.basename(file).replace(/\.holv$/, "");
@@ -588,7 +589,8 @@ const argv = proc.argv.slice(2);
 const simulate = argv.includes("--simulate");
 const args = argv.filter((a) => !a.startsWith("--"));
 if (proc.env.HOLV_TEST) proc.exit(runExamples(prog.__examples) ? 0 : 1);
-const caps = new Caps(simulate);
+const extra = proc.env.HOLV_CAPS ? (await import(proc.env.HOLV_CAPS)).default : {};
+const caps = new Caps(simulate, extra);
 try {
   const code = prog.main(${args.join(", ")});
   if (simulate) caps.plan();
@@ -601,24 +603,27 @@ try {
   }
   const tsc = findTsc();
   if (tsc && !opts.skipTsc) {
-    const r = spawnSync(tsc, ["--strict", "--noEmit", "--noUncheckedIndexedAccess", "--allowImportingTsExtensions", "--module", "nodenext", "--target", "es2022", "--skipLibCheck", path.join(outDir, `${name}.ts`), ...(main ? [path.join(outDir, `${name}.run.ts`)] : [])], { encoding: "utf8" });
+    const r = spawnSync(tsc, ["--strict", "--noEmit", "--noUncheckedIndexedAccess", "--allowImportingTsExtensions", "--module", "nodenext", "--target", "es2022", "--skipLibCheck", path.join(outDir, `${name}.ts`), ...(main ? [path.join(outDir, `${name}.run.ts`)] : []), ...(capsFile ? [capsFile] : [])], { encoding: "utf8" });
     if (r.status !== 0) { console.error(JSON.stringify({ file, code: "E090", msg: "tsc rejected the emitted TypeScript; this is a holvc bug", tsc: r.stdout.trim() })); process.exit(1); }
   } else if (!opts.skipTsc) console.error(JSON.stringify({ file, warn: "tsc not found; independent typecheck skipped" }));
-  return { outDir, name, hasMain: !!main };
+  return { outDir, name, hasMain: !!main, capsFile };
 }
 function runNode(script, args, env = {}) {
   const r = spawnSync(process.execPath, ["--experimental-strip-types", "--no-warnings", script, ...args], { stdio: "inherit", env: { ...process.env, ...env } });
   process.exit(r.status ?? 1);
 }
 
-const [, , cmd, file, ...rest] = process.argv;
-const usage = "usage: holvc check|build|run|test|fmt <file.holv> [args] | holvc spec";
+const [, , cmd, file, ...rawRest] = process.argv;
+const capsIdx = rawRest.indexOf("--caps");
+const capsOpt = capsIdx >= 0 ? rawRest[capsIdx + 1] : undefined;
+const rest = capsIdx >= 0 ? rawRest.filter((_, i) => i !== capsIdx && i !== capsIdx + 1) : rawRest;
+const usage = "usage: holvc check|build|run|test|fmt <file.holv> [args] [--caps file.ts] [--simulate] | holvc spec";
 try {
   if (cmd === "spec") process.stdout.write(fs.readFileSync(path.join(HERE, "spec.md"), "utf8"));
   else if (!file) { console.error(usage); process.exit(2); }
   else if (cmd === "check") { const { items, errors } = compile(file); if (!report(file, errors)) process.exit(1); console.log(JSON.stringify({ ok: true, file, fns: items.filter((i) => i.k === "fn").length })); }
   else if (cmd === "build") { const b = build(file); console.log(JSON.stringify({ ok: true, out: path.join(b.outDir, `${b.name}.ts`) })); }
-  else if (cmd === "run") { const b = build(file); if (!b.hasMain) { console.error(JSON.stringify({ file, code: "E061", msg: "no fn main" })); process.exit(1); } runNode(path.join(b.outDir, `${b.name}.run.ts`), rest); }
+  else if (cmd === "run") { const b = build(file, { caps: capsOpt }); if (!b.hasMain) { console.error(JSON.stringify({ file, code: "E061", msg: "no fn main" })); process.exit(1); } runNode(path.join(b.outDir, `${b.name}.run.ts`), rest, b.capsFile ? { HOLV_CAPS: b.capsFile } : {}); }
   else if (cmd === "test") { const b = build(file); runNode(path.join(b.outDir, `${b.name}.run.ts`), [], { HOLV_TEST: "1" }); }
   else if (cmd === "fmt") {
     const { items, comments } = compile(file); // fmt only needs a parse; type errors are reported by check

@@ -45,5 +45,5 @@ Builtins: `sqrt(Float) -> Float` `floor(Float) -> Int` `toFloat(Int) -> Float` `
 A `fn(a, b) { ... }` literal is only allowed as the argument of `sortBy`.
 
 ## Tooling
-`holvc check f.holv` types + effects, JSON errors on stderr. `holvc run f.holv args` builds, runs tsc on the output, runs. `--simulate` swaps caps for dry ones and prints the effect log. `holvc test f.holv` runs examples. `holvc fmt f.holv [--write]` canonical form. `holvc spec` prints this file.
+`holvc check f.holv` types + effects, JSON errors on stderr. `holvc run f.holv args` builds, runs tsc on the output, runs. `--simulate` swaps caps for dry ones and prints the effect log. `--caps file.ts` adds capability implementations: the file's default export maps cap names to `{ real(): object, dry(): object }`. This is the only way foreign code (npm, anything) enters a holv program; there is no import. `holvc test f.holv` runs examples. `holvc fmt f.holv [--write]` canonical form. `holvc spec` prints this file.
 Errors: `{"file","code","line","col","msg","fix"?}`. `fix`, when present, is the exact edit to make.
