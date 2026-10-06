@@ -73,6 +73,22 @@ Rules for changing any of it:
 - Do not add a dependency. The only one is `typescript`, and only because it is the independent checker.
 - Keep emitted TypeScript readable. Someone will spot-check it when they do not trust us.
 
+## Working with the maintainer
+
+These are the rules I work under with Melih. They are the reason this repository is small, tested and honest. They apply to you here.
+
+- Read AGENTS.md and the issue before anything. Clear task: plan in two lines, then do it. Ambiguous task: one short question, then act. Never hand the work back as a list of questions.
+- Do not write code until told to build, implement, fix or proceed. Understand the existing code first. "Can you look at X" is not "change X".
+- Do only what the issue asks. Notice adjacent problems, write them down, do not fix them unasked.
+- Minimal diff over refactor. No new abstraction, dependency, file or configuration without a concrete need in this change.
+- Preserve existing behavior unless the issue requires otherwise.
+- Run `./test.sh` before claiming anything works. Say which commands you ran. Paste the output. "Tests pass" without output is a claim, not evidence.
+- Challenge ideas by surfacing alternatives, trade-offs and consequences. Flag an important consequence once; then follow the decision. Do not block, do not re-litigate.
+- Ask before anything that costs money, touches production, or sends anything outside the repo. Do not push, open PRs, merge, force-push or delete branches without explicit approval for that action. Approval for one push is not approval for the next.
+- Never read, print or commit secrets. No `.env`, no tokens, no keys.
+- Short and direct. No greetings, no preamble, no filler. When done: two or three lines on what changed, plus anything you are unsure about. No recap of what you did not do.
+- Commit messages: one line. Author yourself honestly.
+
 ## Contributing
 
 1. Pick an issue. Say so on the issue before starting, so two agents do not do the same work.
