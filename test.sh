@@ -26,8 +26,8 @@ cmp -s /tmp/holv_a.txt /tmp/holv_b.txt && ok "output matches JS reference at n=1
 
 $H run examples/rank.holv 3 --simulate 2>/dev/null | grep -q '"effect":"Out.print"' && ok "simulate logs effects, prints nothing" || bad "simulate"
 
-[ -d examples/npm/node_modules ] || pnpm install --silent --dir examples/npm
-[ "$($H run examples/npm/slug.holv "Hello World, from holv!" --caps examples/npm/caps.ts 2>/dev/null)" = "/posts/hello-world-from-holv" ] && ok "npm package behind a cap via --caps" || bad "npm cap"
+[ -d caps/slugify/node_modules ] || pnpm install --silent --frozen-lockfile --dir caps/slugify
+[ "$($H run examples/npm/slug.holv "Hello World, from holv!" --caps slugify 2>/dev/null)" = "/posts/hello-world-from-holv" ] && ok "npm package behind a reviewed cap via --caps slugify" || bad "npm cap"
 
 $H fmt examples/rank.holv > /tmp/holv_f1.holv && $H fmt /tmp/holv_f1.holv > /tmp/holv_f2.holv && cmp -s /tmp/holv_f1.holv /tmp/holv_f2.holv && ok "fmt is idempotent" || bad "fmt not idempotent"
 $H check /tmp/holv_f1.holv >/dev/null 2>&1 && ok "fmt output still typechecks" || bad "fmt output broken"

@@ -562,7 +562,9 @@ function findTsc() {
   return w.status === 0 ? w.stdout.trim() : null;
 }
 function build(file, opts = {}) {
-  const capsFile = opts.caps ? path.resolve(opts.caps) : null;
+  // --caps takes a file, or a name resolved from caps/<name>/caps.ts (the reviewed wrapper set)
+  const capsFile = !opts.caps ? null : /[/.]/.test(opts.caps) ? path.resolve(opts.caps) : path.join(HERE, "caps", opts.caps, "caps.ts");
+  if (capsFile && !fs.existsSync(capsFile)) { console.error(JSON.stringify({ file, code: "E062", msg: `no caps file ${capsFile}` })); process.exit(1); }
   const { items, errors } = compile(file);
   if (!report(file, errors)) process.exit(1);
   const name = path.basename(file).replace(/\.holv$/, "");

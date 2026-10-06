@@ -50,7 +50,7 @@ fn main(clock: Clock, out: Out, n: Int) -> Int
 }
 ```
 
-Full program with sorting, mutation and a capability for randomness: [examples/rank.holv](examples/rank.holv). An npm package wrapped as a capability, which is the only way foreign code enters: [examples/npm](examples/npm).
+Full program with sorting, mutation and a capability for randomness: [examples/rank.holv](examples/rank.holv). An npm package wrapped as a capability, which is the only way foreign code enters: [examples/npm/slug.holv](examples/npm/slug.holv) using the reviewed wrapper in [caps/slugify](caps/slugify).
 
 ## Use
 
@@ -64,7 +64,7 @@ pnpm install            # only for tsc
 ./holvc.mjs run examples/rank.holv 10 --simulate
 ./holvc.mjs run examples/holed.holv 5         # stops at the hole, exit 3
 ./holvc.mjs test examples/rank.holv           # run `example` lines
-./holvc.mjs run examples/npm/slug.holv "Hello World" --caps examples/npm/caps.ts   # an npm package behind a cap
+./holvc.mjs run examples/npm/slug.holv "Hello World" --caps slugify   # an npm package behind a reviewed cap from caps/
 ./holvc.mjs fmt examples/rank.holv --write
 ./test.sh                                     # the whole pipeline, 14 checks
 ```

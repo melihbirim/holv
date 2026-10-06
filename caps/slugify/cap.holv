@@ -1,0 +1,1 @@
+cap Slug { slugify(s: String): String }
