@@ -1,0 +1,40 @@
+holv 0
+
+-- expect: run => fib(78) = 8944394323791464
+-- args: 78
+-- Fibonacci two ways. Int is a checked 53-bit integer, so fib(79) stops the program instead of rounding.
+cap Out { print(s: String): Unit }
+
+-- the definition, as written; exponential, fine for small n
+fn fibRec(n: Int) -> Int
+  example fibRec(0) == 0
+  example fibRec(1) == 1
+  example fibRec(10) == 55
+{ if n < 2 { n } else { fibRec(n - 1) + fibRec(n - 2) } }
+
+-- the one to use
+fn fib(n: Int) -> Int
+  example fib(0) == 0
+  example fib(1) == 1
+  example fib(10) == 55
+  example fib(78) == 8944394323791464
+{
+  -- loop ends exactly at fib(n): computing one step further would overflow at n = 78
+  if n == 0 { 0 } else {
+    var a = 0
+    var b = 1
+    for i in 1 .. n {
+      let next = a + b
+      a = b
+      b = next
+    }
+    b
+  }
+}
+
+fn main(out: Out, n: Int) -> Int
+  effects Out
+{
+  out.print("fib(" + str(n) + ") = " + str(fib(n)))
+  0
+}
