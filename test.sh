@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# The one runnable check. Fails loudly if any pipeline stage regresses.
+# The one runnable check. Fails loudly if any pipeline stage regresses. Exit code is the verdict; read the FAIL lines.
 set -u
 cd "$(dirname "$0")"
 H="node holvc.mjs"
@@ -26,7 +26,7 @@ cmp -s /tmp/holv_a.txt /tmp/holv_b.txt && ok "output matches JS reference at n=1
 
 $H run examples/rank.holv 3 --simulate 2>/dev/null | grep -q '"effect":"Out.print"' && ok "simulate logs effects, prints nothing" || bad "simulate"
 
-[ -d caps/slugify/node_modules ] || pnpm install --silent --frozen-lockfile --dir caps/slugify
+[ -d caps/slugify/node_modules ] || pnpm install --silent --frozen-lockfile --dir caps/slugify || { bad "pnpm install caps/slugify"; exit 1; }
 [ "$($H run examples/npm/slug.holv "Hello World, from holv!" --caps slugify 2>/dev/null)" = "/posts/hello-world-from-holv" ] && ok "npm package behind a reviewed cap via --caps slugify" || bad "npm cap"
 
 $H fmt examples/rank.holv > /tmp/holv_f1.holv && $H fmt /tmp/holv_f1.holv > /tmp/holv_f2.holv && cmp -s /tmp/holv_f1.holv /tmp/holv_f2.holv && ok "fmt is idempotent" || bad "fmt not idempotent"
