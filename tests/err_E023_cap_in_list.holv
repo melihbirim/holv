@@ -1,0 +1,4 @@
+holv 0
+-- expect: error E023
+cap Clock { now(): Int }
+fn first(cs: List<Clock>) -> Int { cs[0].now() }

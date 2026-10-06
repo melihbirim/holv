@@ -22,7 +22,7 @@ fn main(clock: Clock, out: Out, n: Int) -> Int        -- effectful fn: cap param
   0
 }
 ```
-Rules: a fn that takes a cap must declare `effects Cap`. A fn that calls an effectful fn must declare its effects too. `main` may take caps and Int/Float/String/Bool; the driver supplies caps, argv supplies the rest.
+Rules: a cap type may appear only as a fn parameter: never a struct field, a `List` element, a cap method parameter or result, or a fn return type (E023). A fn that takes a cap must declare `effects Cap`. A fn that calls an effectful fn must declare its effects too. `main` may take caps and Int/Float/String/Bool; the driver supplies caps, argv supplies the rest.
 
 ## Types
 `Int` `Float` `String` `Bool` `Unit` `List<T>` and declared types. No null. No implicit conversion: `Int` and `Float` never mix, use `toFloat(i)`. `/` is Float only; Int uses `div` and `mod`.

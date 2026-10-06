@@ -1,0 +1,6 @@
+holv 0
+-- expect: error E023
+cap Clock { now(): Int }
+fn same(clock: Clock) -> Clock
+  effects Clock
+{ clock }

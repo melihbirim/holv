@@ -1,0 +1,4 @@
+holv 0
+-- expect: error E023
+cap Clock { now(): Int }
+cap Factory { make(c: Clock): Clock }

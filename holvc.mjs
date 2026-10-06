@@ -254,18 +254,29 @@ class Checker {
   known() { return ["Int", "Float", "String", "Bool", "Unit", "List<T>", ...this.structs.keys(), ...this.caps.keys()]; }
   resolve(t) {
     if (T[t.name]) return T[t.name];
-    if (t.name === "List") { if (t.args.length !== 1) return this.err("E040", t, "List takes one type argument", "write List<T> with exactly one element type"); return listT(this.resolve(t.args[0])); }
+    if (t.name === "List") {
+      if (t.args.length !== 1) return this.err("E040", t, "List takes one type argument", "write List<T> with exactly one element type");
+      const el = this.resolve(t.args[0]);
+      if (el.k === "cap") return this.err("E023", t, `List<${el.n}>: a capability cannot be stored in data`, `pass ${el.n} as a fn parameter instead; capabilities are arguments, never list elements`);
+      return listT(el);
+    }
     if (this.structs.has(t.name)) return { k: "struct", n: t.name };
     if (this.caps.has(t.name)) return { k: "cap", n: t.name };
     return this.err("E040", t, `unknown type ${t.name}`, `declare 'type ${t.name} { ... }' or 'cap ${t.name} { ... }', or use one of the known types`, { known: this.known() });
   }
   run() {
-    for (const s of this.structs.values()) for (const f of s.fields) this.resolve(f.type);
-    for (const c of this.caps.values()) for (const m of c.methods) { m.params.forEach((p) => this.resolve(p.type)); this.resolve(m.ret); }
+    // Capabilities are fn parameters and nothing else: not fields, not elements, not method arguments, not results.
+    // Otherwise a cap could travel inside a value past the effect check.
+    const noCap = (t, where, what, fix) => { const r = this.resolve(t); if (r.k === "cap") this.err("E023", t, `${where}: a capability cannot be ${what}`, fix); return r; };
+    for (const s of this.structs.values()) for (const f of s.fields) noCap(f.type, `${s.name}.${f.name}`, "a struct field", `remove the field and pass ${f.type.name} as a fn parameter where it is needed`);
+    for (const c of this.caps.values()) for (const m of c.methods) {
+      m.params.forEach((p) => noCap(p.type, `${c.name}.${m.name}`, "a cap method parameter", "pass plain data to cap methods; caps never take other caps"));
+      noCap(m.ret, `${c.name}.${m.name}`, "a cap method result", "return plain data; caps come from the driver, never from another cap");
+    }
     for (const f of this.fns.values()) {
       const env = new Map();
       for (const p of f.params) env.set(p.name, { t: this.resolve(p.type), mut: false });
-      const ret = this.resolve(f.ret);
+      const ret = noCap(f.ret, `fn ${f.name}`, "a return value", "return the data the capability produced instead of the capability");
       const got = this.block(f.body, env, true);
       if (!same(got, ret)) this.err("E050", f.body.tail ?? f, `fn ${f.name} returns ${show(got)}, declared ${show(ret)}`, `make the last expression of fn ${f.name} a ${show(ret)}, or change its declared return type to ${show(got)}`, { expected: show(ret), got: show(got) });
       for (const ex of f.examples) {
