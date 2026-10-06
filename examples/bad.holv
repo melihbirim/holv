@@ -1,0 +1,26 @@
+holv 0
+-- Every line below that is wrong is wrong on purpose. `holvc check` must reject all of them.
+
+type Post { id: Int, up: Int }
+
+cap Clock { now(): Int }
+
+fn age(created: Int, clock: Clock) -> Int {
+  clock.now() - created
+}
+
+fn tick(clock: Clock) -> Int
+  effects Clock
+{
+  clock.now()
+}
+
+fn main(clock: Clock) -> Int {
+  let t = tick(clock)
+  let p = Post { id: 1 }
+  let half = p.up / 2
+  let mixed = p.up + 1.5
+  let total = 0
+  total = total + age(0, clock)
+  total
+}

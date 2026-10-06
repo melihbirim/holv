@@ -1,0 +1,22 @@
+holv 0
+-- Same as rank.holv with checksum left as a hole. Runs until the hole, then dumps scope.
+
+type Scored { id: Int, score: Float }
+
+cap Out { print(s: String): Unit }
+
+fn checksum(ranked: List<Scored>) -> Int {
+  hole Int
+}
+
+fn main(out: Out, n: Int) -> Int
+  effects Out
+{
+  let ranked: List<Scored> = List.new()
+  for i in 0 .. n {
+    ranked.push(Scored { id: i, score: toFloat(n - i) / 2.0 })
+  }
+  out.print("top " + str(ranked[0].id))
+  out.print("checksum " + str(checksum(ranked)))
+  0
+}

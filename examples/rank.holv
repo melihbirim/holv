@@ -1,0 +1,60 @@
+holv 0
+-- Hot-score ranking. Pure core; clock, randomness and stdout are capabilities the driver passes in.
+
+type Post { id: Int, up: Int, down: Int, created: Int }
+type Scored { id: Int, score: Float }
+
+cap Clock { now(): Int }
+cap Rng { next(): Int }
+cap Out { print(s: String): Unit }
+
+fn score(p: Post, now: Int) -> Float
+  example score(Post { id: 1, up: 10, down: 0, created: 0 }, 7200) == 1.25
+{
+  let base = toFloat((now - p.created) div 3600 + 2)
+  toFloat(p.up - p.down) / (base * sqrt(base))
+}
+
+fn makePosts(rng: Rng, n: Int, now: Int) -> List<Post>
+  effects Rng
+{
+  let posts: List<Post> = List.new()
+  for i in 0 .. n {
+    let up = rng.next() mod 1000
+    let down = rng.next() mod 300
+    let age = rng.next() mod 720000
+    posts.push(Post { id: i, up: up, down: down, created: now - age })
+  }
+  posts
+}
+
+fn rank(posts: List<Post>, now: Int) -> List<Scored> {
+  let scored: List<Scored> = List.new()
+  for i in 0 .. posts.len {
+    let p = posts[i]
+    scored.push(Scored { id: p.id, score: score(p, now) })
+  }
+  -- descending score, ascending id on ties
+  scored.sortBy(fn(a, b) {
+    if a.score != b.score { if b.score > a.score { 1 } else { -1 } } else { a.id - b.id }
+  })
+  scored
+}
+
+fn checksum(ranked: List<Scored>) -> Int {
+  var total = 0
+  for i in 0 .. ranked.len {
+    total = total + floor(ranked[i].score * 1000000.0)
+  }
+  total
+}
+
+fn main(clock: Clock, rng: Rng, out: Out, n: Int) -> Int
+  effects Clock, Rng, Out
+{
+  let now = clock.now()
+  let ranked = rank(makePosts(rng, n, now), now)
+  out.print("top " + str(ranked[0].id) + " " + str(ranked[1].id) + " " + str(ranked[2].id))
+  out.print("checksum " + str(checksum(ranked)))
+  0
+}

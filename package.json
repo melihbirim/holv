@@ -1,0 +1,11 @@
+{
+  "name": "holv",
+  "version": "0.0.1",
+  "description": "holv: a programming language for AI agents. Compiles to TypeScript.",
+  "type": "module",
+  "bin": { "holvc": "./holvc.mjs" },
+  "scripts": { "test": "./test.sh" },
+  "license": "MIT",
+  "devDependencies": { "typescript": "^5.9.0" },
+  "engines": { "node": ">=22.6" }
+}

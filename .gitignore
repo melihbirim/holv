@@ -1,0 +1,6 @@
+node_modules/
+.holv-out/
+bench/rank_rs
+bench/rank_go
+bench/rank_zig
+*.o
