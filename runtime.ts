@@ -19,6 +19,12 @@ export class RuntimeError extends Error {
   fix: { do: string };
   constructor(name: string, msg: string, fix: string) { super(msg); this.name = name; this.fix = { do: fix }; }
 }
+// Int is a 53-bit safe integer. Every Int + - * neg and floor() result passes through here.
+export function ck(n: number): number {
+  if (!Number.isSafeInteger(n))
+    throw new RuntimeError("IntOverflow", `Int result ${n} is outside the safe range ±9007199254740991`, "use Float for values this large, or restructure the arithmetic (e.g. divide before multiplying); Int is a 53-bit integer");
+  return n;
+}
 export function at<T>(xs: T[], i: number): T {
   if (!Number.isInteger(i) || i < 0 || i >= xs.length)
     throw new RuntimeError("IndexOutOfRange", `index ${i} out of range for a List of length ${xs.length}`, `guard the index with 'if i < xs.len { ... }' or fix the arithmetic that produced ${i}`);

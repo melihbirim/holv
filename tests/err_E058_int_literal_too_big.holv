@@ -1,0 +1,3 @@
+holv 0
+-- expect: error E058
+fn f() -> Int { 9007199254740993 }

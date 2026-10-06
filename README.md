@@ -16,7 +16,7 @@ holv is built around those failure modes:
 
 - **Effects are capabilities, passed as arguments.** No ambient I/O. A function that takes a `Clock` must say `effects Clock`. A function that calls it must say so too. The compiler rejects anything else. `--simulate` swaps every capability for a dry one and prints the effect log instead of touching the world.
 - **Typed holes run.** `hole Int` compiles. The program runs until it reaches the hole, then stops with the scope as JSON. Feedback on the 80% before guessing the 20%.
-- **No silent escapes.** No null. `Int` and `Float` never mix. `/` is Float-only. Out-of-range index stops the program. Both `if` branches must agree. `let` is immutable.
+- **No silent escapes.** No null. `Int` and `Float` never mix. `/` is Float-only. `Int` is a checked 53-bit integer: overflow stops the program instead of rounding. Out-of-range index stops the program. Both `if` branches must agree. `let` is immutable.
 - **Examples live in the signature.** `example score(...) == 1.25` sits above the body and runs with `holvc test`.
 - **One canonical form.** `holvc fmt` is idempotent. Diffs are semantic.
 - **Errors are JSON, and every one says what to do.** `{"code","line","col","msg",...facts,"fix":{"do":"..."}}`. `fix.do` is an imperative sentence; `expected`, `got`, `scope`, `fields`, `known` are the facts an agent would otherwise look up. Runtime errors have the same shape. The conformance suite rejects any error without `fix.do`.

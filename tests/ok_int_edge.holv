@@ -1,0 +1,12 @@
+holv 0
+-- expect: run => 9007199254740991 -9007199254740991 3
+cap Out { print(s: String): Unit }
+fn main(out: Out) -> Int
+  effects Out
+{
+  let big = 9007199254740990 + 1
+  let neg = -big
+  let f = floor(3.9)
+  out.print(str(big) + " " + str(neg) + " " + str(f))
+  0
+}
