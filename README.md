@@ -20,6 +20,7 @@ holv is built around those failure modes:
 - **Examples live in the signature.** `example score(...) == 1.25` sits above the body and runs with `holvc test`.
 - **One canonical form.** `holvc fmt` is idempotent. Diffs are semantic.
 - **Errors are JSON, and every one says what to do.** `{"code","line","col","msg",...facts,"fix":{"do":"..."}}`. `fix.do` is an imperative sentence; `expected`, `got`, `scope`, `fields`, `known` are the facts an agent would otherwise look up. Runtime errors have the same shape. The conformance suite rejects any error without `fix.do`.
+- **Every program has a contract, generated, never written.** `holvc contract f.holv` derives types, caps, functions with their effects and examples, `main`'s arguments and exit codes from the signatures, with a hash that changes exactly when the interface does. Every build writes it; every built program answers `--contract`. Documentation that is derived cannot drift.
 - **The spec fits in a prompt.** `holvc spec` prints it: 49 lines. A language with no training corpus must be learnable from context in one read.
 - **The compiler is not the trusted base.** holvc emits TypeScript and then runs `tsc --strict` on its own output. The type checker that matters is one Claude did not write. During the first build, tsc caught three bugs in holvc before anything ran.
 
@@ -64,6 +65,7 @@ pnpm install            # only for tsc
 ./holvc.mjs run examples/rank.holv 10 --simulate
 ./holvc.mjs run tests/hole_stops_with_scope.holv 5   # stops at the hole, exit 3
 ./holvc.mjs test examples/rank.holv           # run `example` lines
+./holvc.mjs contract examples/rank.holv       # the program's contract, derived from its signatures
 ./holvc.mjs run examples/npm/slug.holv "Hello World" --caps slugify   # an npm package behind a reviewed cap from caps/
 ./holvc.mjs fmt examples/rank.holv --write
 ./test.sh                                     # every tests/*.holv conformance file plus integration checks

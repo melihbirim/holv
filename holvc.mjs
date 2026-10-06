@@ -5,6 +5,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
+import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -69,7 +70,8 @@ function lex(src) {
 const PREC = { or: 1, and: 2, "==": 3, "!=": 3, "<": 4, ">": 4, "<=": 4, ">=": 4, "+": 5, "-": 5, "*": 6, "/": 6, div: 6, mod: 6 };
 
 class Parser {
-  constructor(toks) { this.toks = toks; this.p = 0; }
+  constructor(toks, src = "") { this.toks = toks; this.p = 0; this.src = src; this.lineStarts = [0]; for (let i = 0; i < src.length; i++) if (src[i] === "\n") this.lineStarts.push(i + 1); }
+  offset(tok) { return this.lineStarts[tok.line - 1] + tok.col - 1; }
   peek(o = 0) { return this.toks[this.p + o]; }
   at(t) { return this.peek().t === t; }
   eat(t) { return this.at(t) ? this.toks[this.p++] : null; }
@@ -131,7 +133,7 @@ class Parser {
     const effects = [];
     if (this.eat("effects")) { do { const e = this.peek(); effects.push({ name: this.ident(), ...this.pos(e) }); } while (this.eat(",")); }
     const examples = [];
-    while (this.at("example")) { const e = this.expect("example"); const call = this.binary(PREC["=="] + 1); this.expect("=="); examples.push({ call, expected: this.expr(), ...this.pos(e) }); }
+    while (this.at("example")) { const e = this.expect("example"); const from = this.peek(); const call = this.binary(PREC["=="] + 1); this.expect("=="); const expected = this.expr(); const to = this.peek(); examples.push({ call, expected, text: this.src.slice(this.offset(from), this.offset(to)).trim(), ...this.pos(e) }); }
     const body = this.block();
     return { k: "fn", name, params, ret, effects, examples, body, ...this.pos(k) };
   }
@@ -567,11 +569,39 @@ function format(items, comments) {
   return out + take(Infinity, 0);
 }
 
+// ---------------------------------------------------------------- contract
+// Generated from the signatures on every build, never written by hand, so it cannot drift from the code.
+// `hash` is sha256 over the canonical JSON of everything else; it changes exactly when the interface changes.
+function contract(items, name) {
+  const ty = (t) => (t.args.length ? `${t.name}<${t.args.map(ty).join(", ")}>` : t.name);
+  const params = (ps) => Object.fromEntries(ps.map((p) => [p.name, ty(p.type)]));
+  const caps = new Set(items.filter((i) => i.k === "cap").map((i) => i.name));
+  const c = { holv: LANG_VERSION, program: name, types: {}, caps: {}, fns: {}, main: null,
+    exit_codes: { 0: "ok", 1: "compile or build error", 3: "hole reached", 4: "runtime error" },
+    errors: "JSON lines on stderr: {code, line, col, msg, ...facts, fix: {do}}" };
+  for (const it of items) {
+    if (it.k === "type") c.types[it.name] = params(it.fields);
+    else if (it.k === "cap") c.caps[it.name] = Object.fromEntries(it.methods.map((m) => [m.name, { params: params(m.params), returns: ty(m.ret) }]));
+    else {
+      c.fns[it.name] = { params: params(it.params), returns: ty(it.ret), effects: it.effects.map((e) => e.name), examples: it.examples.map((e) => e.text) };
+      if (it.name === "main") c.main = {
+        args: it.params.filter((p) => !caps.has(p.type.name)).map((p) => ({ name: p.name, type: ty(p.type) })),
+        caps: it.params.filter((p) => caps.has(p.type.name)).map((p) => p.type.name),
+        effects: it.effects.map((e) => e.name),
+        usage: `holvc run ${name}.holv ${it.params.filter((p) => !caps.has(p.type.name)).map((p) => `<${p.name}>`).join(" ")}`.trim(),
+      };
+    }
+  }
+  const canon = (v) => Array.isArray(v) ? v.map(canon) : v && typeof v === "object" ? Object.fromEntries(Object.keys(v).sort().map((k) => [k, canon(v[k])])) : v;
+  c.hash = createHash("sha256").update(JSON.stringify(canon(c))).digest("hex");
+  return c;
+}
+
 // ---------------------------------------------------------------- pipeline
 function compile(file) {
   const src = fs.readFileSync(file, "utf8");
   const { toks, comments } = lex(src);
-  const items = new Parser(toks).program();
+  const items = new Parser(toks, src).program();
   const errors = [...new Checker(items).run(), ...checkEffects(items)];
   return { items, comments, errors, src };
 }
@@ -618,12 +648,13 @@ const tsBackend = {
   name: "TypeScript",
   checker: "tsc",
   emit(items, name, srcName) {
-    return { [`${name}.ts`]: emit(items, srcName), "runtime.ts": fs.readFileSync(path.join(HERE, "runtime.ts"), "utf8"), [`${name}.run.ts`]: tsDriver(items, name, srcName) };
+    const c = contract(items, name);
+    return { [`${name}.ts`]: emit(items, srcName), "runtime.ts": fs.readFileSync(path.join(HERE, "runtime.ts"), "utf8"), [`${name}.run.ts`]: tsDriver(items, name, srcName, c), [`${name}.contract.json`]: JSON.stringify(c, null, 2) + "\n" };
   },
   check(outDir, files, capsFile) {
     const tsc = findTsc();
     if (!tsc) return { status: "missing", fix: "run pnpm install in the holv directory, or set HOLV_TSC to a tsc binary" };
-    const r = spawnSync(tsc, ["--strict", "--noEmit", "--noUncheckedIndexedAccess", "--allowImportingTsExtensions", "--module", "nodenext", "--target", "es2022", "--skipLibCheck", ...files.filter((f) => f !== "runtime.ts").map((f) => path.join(outDir, f)), ...(capsFile ? [capsFile] : [])], { encoding: "utf8" });
+    const r = spawnSync(tsc, ["--strict", "--noEmit", "--noUncheckedIndexedAccess", "--allowImportingTsExtensions", "--module", "nodenext", "--target", "es2022", "--skipLibCheck", ...files.filter((f) => f.endsWith(".ts") && f !== "runtime.ts").map((f) => path.join(outDir, f)), ...(capsFile ? [capsFile] : [])], { encoding: "utf8" });
     return r.status === 0 ? { status: "ok" } : { status: "rejected", output: r.stdout.trim() };
   },
   run(outDir, name, args, env = {}) {
@@ -632,7 +663,7 @@ const tsBackend = {
   },
 };
 const backends = { ts: tsBackend };
-function tsDriver(items, name, srcName) {
+function tsDriver(items, name, srcName, contractObj) {
   const main = items.find((i) => i.k === "fn" && i.name === "main");
   {
     const caps = new Set(items.filter((i) => i.k === "cap").map((i) => i.name));
@@ -650,6 +681,7 @@ function tsDriver(items, name, srcName) {
 import { Caps, HoleReached, RuntimeError, runExamples, proc } from "./runtime.ts";
 import * as prog from "./${name}.ts";
 const argv = proc.argv.slice(2);
+if (argv.includes("--contract")) { console.log(${JSON.stringify(JSON.stringify(contractObj))}); proc.exit(0); }
 const simulate = argv.includes("--simulate");
 const args = argv.filter((a) => !a.startsWith("--"));
 if (proc.env.HOLV_TEST) proc.exit(runExamples(prog.__examples) ? 0 : 1);
@@ -675,11 +707,12 @@ const [, , cmd, file, ...rawRest] = process.argv;
 const flag = (name) => { const i = rawRest.indexOf(name); return i >= 0 ? rawRest[i + 1] : undefined; };
 const capsOpt = flag("--caps"), targetOpt = flag("--target");
 const rest = rawRest.filter((a, i) => !(["--caps", "--target"].includes(a) || ["--caps", "--target"].includes(rawRest[i - 1])));
-const usage = "usage: holvc check|build|run|test <file.holv> [args] [--caps file.ts] [--target ts] [--simulate] | holvc fmt <file.holv> [--write|--check] | holvc spec";
+const usage = "usage: holvc check|build|run|test|contract <file.holv> [args] [--caps file.ts] [--target ts] [--simulate] | holvc fmt <file.holv> [--write|--check] | holvc spec";
 try {
   if (cmd === "spec") process.stdout.write(fs.readFileSync(path.join(HERE, "spec.md"), "utf8"));
   else if (!file) { console.error(usage); process.exit(2); }
   else if (cmd === "check") { const { items, errors } = compile(file); if (!report(file, errors)) process.exit(1); console.log(JSON.stringify({ ok: true, file, fns: items.filter((i) => i.k === "fn").length })); }
+  else if (cmd === "contract") { const { items, errors } = compile(file); if (!report(file, errors)) process.exit(1); console.log(JSON.stringify(contract(items, path.basename(file).replace(/\.holv$/, "")), null, 2)); }
   else if (cmd === "build") { const b = build(file, { target: targetOpt }); console.log(JSON.stringify({ ok: true, out: b.outDir, target: b.be.name })); }
   else if (cmd === "run") { const b = build(file, { caps: capsOpt, target: targetOpt }); if (!b.hasMain) { console.error(JSON.stringify({ file, code: "E061", msg: "no fn main", fix: { do: "add fn main(...) -> Int; its parameters may be caps and Int, Float, String or Bool" } })); process.exit(1); } b.be.run(b.outDir, b.name, rest, b.capsFile ? { HOLV_CAPS: b.capsFile } : {}); }
   else if (cmd === "test") { const b = build(file, { target: targetOpt }); b.be.run(b.outDir, b.name, [], { HOLV_TEST: "1" }); }

@@ -52,6 +52,10 @@ Every error has `fix.do`: one imperative sentence that says what to change. Do t
 - Runtime errors are JSON too, never a stack trace: `{"error":"IndexOutOfRange","msg":"...","fix":{"do":"..."}}`. Set `HOLV_DEBUG=1` to get the stack.
 - Exit codes: 0 ok, 1 compile or build error, 3 hole reached, 4 runtime error in program code.
 
+## Documentation that cannot lie
+
+There is no hand-written description of any program. `holvc contract f.holv` derives the contract (types, caps, fns, effects, examples, main's arguments, exit codes) from the signatures on every build and hashes it. If you need to know what a program does, read its contract, not a README. If you need to tell someone what a program does, give them the contract. Prose about a program's interface is a bug: delete it or turn it into an `example` line.
+
 ## Working on the compiler
 
 One file, [holvc.mjs](holvc.mjs), in pipeline order. Each section starts with a `// ----` banner.
@@ -65,7 +69,8 @@ One file, [holvc.mjs](holvc.mjs), in pipeline order. Each section starts with a 
 | emit | TypeScript source | output must pass `tsc --strict --noUncheckedIndexedAccess`; holvc is allowed to be wrong, tsc is the judge |
 | backends | `{ name, checker, emit, check, run }` per target, selected by `--target` (default `ts`) | everything above the backends banner is target-independent; a new backend is a sibling object, never a branch in shared code |
 | `format` | canonical form | `fmt(fmt(x)) == fmt(x)`; comments survive |
-| pipeline / cli | build, run, test, fmt, spec | `build` always runs tsc when it can find one |
+| contract | `<name>.contract.json` from the signatures on every build; `holvc contract`; the built program answers `--contract` | generated, never written; `hash` changes exactly when the interface changes |
+| pipeline / cli | build, run, test, fmt, contract, spec | `build` always runs tsc when it can find one |
 
 [runtime.ts](runtime.ts): `hole`, `at` (bounds check), `runExamples`, and `Caps`, the capability registry with `real` and `dry` implementations and the `--simulate` Proxy.
 
