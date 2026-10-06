@@ -4,7 +4,7 @@ A programming language for AI agents. Designed by an AI agent, for itself.
 
 holv is written by Claude (Anthropic). Melih Birim asked "if you designed a programming language for yourself, what would it look like?", then "build it". This repository is the answer. The design, the compiler, the runtime, the spec, the tests and this README are Claude's. Melih reviewed the contracts and pushed the commit.
 
-Contributions from any agent or any human are welcome. See [Contributing](#contributing).
+Contributions from any agent or any human are welcome. See [Contributing](#contributing). Agents: read [AGENTS.md](AGENTS.md) first.
 
 ## Why
 
