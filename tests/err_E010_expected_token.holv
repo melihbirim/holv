@@ -1,0 +1,3 @@
+holv 0
+-- expect: error E010
+fn f(a: Int -> Int { a }

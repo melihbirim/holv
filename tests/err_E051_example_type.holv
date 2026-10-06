@@ -1,0 +1,5 @@
+holv 0
+-- expect: error E051
+fn f(a: Int) -> Int
+  example f(1) == "1"
+{ a }

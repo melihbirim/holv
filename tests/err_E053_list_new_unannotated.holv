@@ -1,0 +1,6 @@
+holv 0
+-- expect: error E053
+fn f() -> Int {
+  let xs = List.new()
+  0
+}

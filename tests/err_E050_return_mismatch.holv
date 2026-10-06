@@ -1,0 +1,3 @@
+holv 0
+-- expect: error E050
+fn f() -> Int { "one" }

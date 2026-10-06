@@ -1,0 +1,6 @@
+holv 0
+-- expect: error E052
+fn f() -> Int {
+  let x: Float = 1
+  2
+}

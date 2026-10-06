@@ -1,0 +1,4 @@
+holv 0
+-- expect: error E056
+type P { x: Int, y: Int }
+fn f() -> P { P { x: 1 } }

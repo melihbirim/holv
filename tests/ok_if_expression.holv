@@ -1,0 +1,16 @@
+holv 0
+-- expect: run => small
+-- args: 3
+cap Out { print(s: String): Unit }
+fn label(n: Int) -> String
+  example label(3) == "small"
+  example label(30) == "big"
+{
+  if n < 10 { "small" } else { "big" }
+}
+fn main(out: Out, n: Int) -> Int
+  effects Out
+{
+  out.print(label(n))
+  0
+}

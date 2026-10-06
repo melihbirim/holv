@@ -1,0 +1,3 @@
+holv 0
+-- expect: error E032
+fn half(a: Int) -> Int { a / 2 }

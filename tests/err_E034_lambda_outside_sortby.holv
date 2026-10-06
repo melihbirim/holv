@@ -1,0 +1,6 @@
+holv 0
+-- expect: error E034
+fn f() -> Int {
+  let g = fn(a, b) { a }
+  1
+}

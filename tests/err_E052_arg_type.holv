@@ -1,0 +1,4 @@
+holv 0
+-- expect: error E052
+fn g(a: Float) -> Float { a }
+fn f() -> Float { g(1) }

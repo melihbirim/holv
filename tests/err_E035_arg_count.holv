@@ -1,0 +1,4 @@
+holv 0
+-- expect: error E035
+fn g(a: Int, b: Int) -> Int { a + b }
+fn f() -> Int { g(1) }

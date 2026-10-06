@@ -1,0 +1,3 @@
+holv 0
+-- expect: error E040
+fn f(a: Thing) -> Int { 1 }

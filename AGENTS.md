@@ -42,12 +42,15 @@ I made every one of these while writing the first program. The compiler now catc
 ## Reading errors
 
 ```
-{"file":"f.holv","code":"E031","line":15,"col":20,"msg":"+: Int and Float differ","fix":{"hint":"wrap the Int side in toFloat()"}}
+{"file":"f.holv","code":"E031","line":15,"col":20,"msg":"+: Int and Float differ","left":"Int","right":"Float","fix":{"do":"wrap the Int side in toFloat(), or use floor() on the Float side if the result should be Int"}}
 ```
 
+Every error has `fix.do`: one imperative sentence that says what to change. Do that. Fields beside `msg` (`expected`, `got`, `scope`, `fields`, `methods`, `known`, `missing`) are the facts you would otherwise have to look up. The conformance suite rejects any error that lacks `fix.do`.
+
 - `E0xx` lexer/parser. `E01x` syntax. `E02x` effects. `E03x`–`E05x` types. `E06x` driver. `E090` tsc rejected the emitted TypeScript: that is a bug in holvc, not in your program; open an issue with the `.holv` file.
-- `fix` shapes: `{"replace","with"}` exact text substitution on that line; `{"fn","add_effect"}` add the cap to that fn's `effects` line (create the line if absent); `{"insert_line_1"}` prepend; `{"hint"}` human-readable only.
-- Exit codes: 0 ok, 1 compile error, 3 hole reached, other: runtime error from node.
+- Machine fields that may sit beside `fix.do`: `{"replace","with"}` exact text substitution on that line; `{"fn","add_effect"}` add the cap to that fn's `effects` line (create the line if absent); `{"insert_line_1"}` prepend.
+- Runtime errors are JSON too, never a stack trace: `{"error":"IndexOutOfRange","msg":"...","fix":{"do":"..."}}`. Set `HOLV_DEBUG=1` to get the stack.
+- Exit codes: 0 ok, 1 compile or build error, 3 hole reached, 4 runtime error in program code.
 
 ## Working on the compiler
 
@@ -67,7 +70,7 @@ One file, [holvc.mjs](holvc.mjs), in pipeline order. Each section starts with a 
 
 Rules for changing any of it:
 
-- `./test.sh` must pass before and after. Add one check per new rule. Until #1 lands, that means a line in test.sh; after it, a `tests/*.holv` file with an `-- expect:` header.
+- `./test.sh` must pass before and after. Every new rule or error code gets a `tests/*.holv` file with an `-- expect:` header (see tests/README.md). A spec sentence without a test file is not a rule.
 - A new compile error gets a code in the right range, `line`, `col`, and a `fix` when the fix is mechanical. Update spec.md in the same change.
 - One spelling per construct. If your change lets the same program be written two ways, it will be declined.
 - Do not add a dependency. The only one is `typescript`, and only because it is the independent checker.
@@ -88,7 +91,7 @@ These are the rules I work under with Melih. They are the reason this repository
 - Do only what the issue asks. Notice adjacent problems, write them down, do not fix them unasked.
 - Minimal diff over refactor. No new abstraction, dependency, file or configuration without a concrete need in this change.
 - Preserve existing behavior unless the issue requires otherwise.
-- Run `./test.sh` before claiming anything works. Say which commands you ran. Paste the output. "Tests pass" without output is a claim, not evidence.
+- Run `./test.sh` before claiming anything works. It runs every `tests/*.holv` conformance file plus the integration checks. Say which commands you ran. Paste the output. "Tests pass" without output is a claim, not evidence.
 - Challenge ideas by surfacing alternatives, trade-offs and consequences. Flag an important consequence once; then follow the decision. Do not block, do not re-litigate.
 - Ask before anything that costs money, touches production, or sends anything outside the repo. Do not push, open PRs, merge, force-push or delete branches without explicit approval for that action. Approval for one push is not approval for the next.
 - Never read, print or commit secrets. No `.env`, no tokens, no keys.

@@ -1,0 +1,4 @@
+holv 0
+-- expect: error E031
+type P { x: Int }
+fn f(a: P, b: P) -> Bool { a == b }

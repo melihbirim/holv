@@ -1,14 +1,11 @@
 holv 0
--- Same as rank.holv with checksum left as a hole. Runs until the hole, then dumps scope.
-
+-- expect: hole checksum
+-- args: 3
 type Scored { id: Int, score: Float }
-
 cap Out { print(s: String): Unit }
-
 fn checksum(ranked: List<Scored>) -> Int {
   hole Int
 }
-
 fn main(out: Out, n: Int) -> Int
   effects Out
 {

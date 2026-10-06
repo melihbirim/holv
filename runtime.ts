@@ -14,8 +14,14 @@ export function hole<T>(at: string, type: string, scope: Record<string, unknown>
   throw new HoleReached(at, type, scope);
 }
 
+// Runtime errors carry a fix like compile errors do; the driver prints them as JSON and never a stack trace.
+export class RuntimeError extends Error {
+  fix: { do: string };
+  constructor(name: string, msg: string, fix: string) { super(msg); this.name = name; this.fix = { do: fix }; }
+}
 export function at<T>(xs: T[], i: number): T {
-  if (!Number.isInteger(i) || i < 0 || i >= xs.length) throw new RangeError(`index ${i} out of range 0..${xs.length}`);
+  if (!Number.isInteger(i) || i < 0 || i >= xs.length)
+    throw new RuntimeError("IndexOutOfRange", `index ${i} out of range for a List of length ${xs.length}`, `guard the index with 'if i < xs.len { ... }' or fix the arithmetic that produced ${i}`);
   return xs[i] as T;
 }
 
@@ -60,7 +66,7 @@ export class Caps {
   constructor(simulate: boolean, extra: Record<string, Impl> = {}) { this.simulate = simulate; this.table = { ...registry, ...extra }; }
   get(name: string): object {
     const impl = this.table[name];
-    if (!impl) throw new Error(`no implementation for cap ${name}; provide one with --caps file.ts`);
+    if (!impl) throw new RuntimeError("MissingCapability", `no implementation for cap ${name}`, `run with --caps <name> for a reviewed wrapper under caps/, or --caps file.ts whose default export has a ${name} entry with real() and dry()`);
     const target = this.simulate ? impl.dry() : impl.real();
     if (!this.simulate) return target;
     const log = this.log;

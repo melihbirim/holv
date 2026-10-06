@@ -1,0 +1,6 @@
+holv 0
+-- expect: error E033
+cap Clock { now(): Int }
+fn f(clock: Clock) -> Int
+  effects Clock
+{ clock.today() }

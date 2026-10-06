@@ -1,0 +1,4 @@
+holv 0
+-- expect: error E041
+type P { x: Int }
+fn P() -> Int { 1 }

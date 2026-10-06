@@ -1,0 +1,16 @@
+holv 0
+-- expect: error E022
+cap Clock { now(): Int }
+fn tick(clock: Clock) -> Int
+  effects Clock
+{ clock.now() }
+fn main(clock: Clock) -> Int
+  effects Clock
+{ tick(clock) }
+fn wrapper(clock: Clock) -> Int
+  effects Clock
+{ tick(clock) }
+fn pure(c: Int) -> Int { helper(c) }
+fn helper(c: Int) -> Int
+  effects Clock
+{ c }

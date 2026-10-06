@@ -1,0 +1,5 @@
+holv 0
+-- expect: error E020
+fn f() -> Int
+  effects Net
+{ 1 }

@@ -1,0 +1,20 @@
+holv 0
+-- expect: run => 55
+-- args: 10
+cap Out { print(s: String): Unit }
+fn sumTo(n: Int) -> Int
+  example sumTo(10) == 55
+  example sumTo(0) == 0
+{
+  var total = 0
+  for i in 1 .. n + 1 {
+    total = total + i
+  }
+  total
+}
+fn main(out: Out, n: Int) -> Int
+  effects Out
+{
+  out.print(str(sumTo(n)))
+  0
+}

@@ -1,0 +1,6 @@
+holv 0
+-- expect: error E050
+fn f(xs: List<Int>) -> Int {
+  xs.sortBy(fn(a, b) { a < b })
+  0
+}

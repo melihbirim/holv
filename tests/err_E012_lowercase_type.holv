@@ -1,0 +1,3 @@
+holv 0
+-- expect: error E012
+type post { id: Int }

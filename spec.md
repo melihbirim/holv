@@ -41,9 +41,9 @@ Literals `1` `1.5` `"s"` `true`. Operators by precedence: `or` `and` `== !=` `< 
 `Post { id: 1, up: 2, created: 0 }` struct literal, all fields required.
 `xs[i]` (out of range stops the program) `xs.len` `xs.push(v)` `xs.sortBy(fn(a, b) { ... })` comparator returns Int.
 Builtins: `sqrt(Float) -> Float` `floor(Float) -> Int` `toFloat(Int) -> Float` `str(x) -> String`.
-`hole T` compiles and runs; reaching it stops the program with the scope as JSON (exit 3).
+`hole T` compiles and runs; reaching it stops the program with the scope as JSON (exit 3). Runtime errors (index out of range, missing cap) are JSON with `fix.do`, exit 4.
 A `fn(a, b) { ... }` literal is only allowed as the argument of `sortBy`.
 
 ## Tooling
 `holvc check f.holv` types + effects, JSON errors on stderr. `holvc run f.holv args` builds, runs tsc on the output, runs. `--simulate` swaps caps for dry ones and prints the effect log. `--caps file.ts` (or `--caps name` for a reviewed wrapper under `caps/`) adds capability implementations: the file's default export maps cap names to `{ real(): object, dry(): object }`. This is the only way foreign code (npm, anything) enters a holv program; there is no import. `holvc test f.holv` runs examples. `holvc fmt f.holv [--write]` canonical form. `holvc spec` prints this file.
-Errors: `{"file","code","line","col","msg","fix"?}`. `fix`, when present, is the exact edit to make.
+Errors: `{"file","code","line","col","msg",...facts,"fix":{"do":"<what to change>"}}`. `fix.do` is always present. Facts beside `msg` when they exist: `expected`, `got`, `scope` (names in scope), `fields`, `methods`, `known` (types), `missing`, `extra`. Machine edits beside `do` when the fix is mechanical: `replace`/`with`, `fn`/`add_effect`, `insert_line_1`.

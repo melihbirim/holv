@@ -10,9 +10,14 @@ import { fileURLToPath } from "node:url";
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const LANG_VERSION = 0;
 
+// Every error says what is wrong (msg, expected/got), where (line/col), and what to do (fix.do, an imperative
+// sentence an agent can act on without reading anything else; machine fields beside it when the edit is mechanical).
 class HolvError extends Error {
-  constructor(code, line, col, msg, fix) { super(msg); this.code = code; this.line = line; this.col = col; this.fix = fix; }
-  toJSON() { return { code: this.code, line: this.line, col: this.col, msg: this.message, ...(this.fix ? { fix: this.fix } : {}) }; }
+  constructor(code, line, col, msg, fix, extra) {
+    super(msg); this.code = code; this.line = line; this.col = col; this.extra = extra ?? {};
+    this.fix = typeof fix === "string" ? { do: fix } : fix ?? { do: "see holvc spec" };
+  }
+  toJSON() { return { code: this.code, line: this.line, col: this.col, msg: this.message, ...this.extra, fix: this.fix }; }
 }
 
 // ---------------------------------------------------------------- lexer
@@ -48,13 +53,13 @@ function lex(src) {
     }
     if (c === '"') {
       i++;
-      while (src[i] !== '"') { if (i >= src.length || src[i] === "\n") throw new HolvError("E001", line, scol, "unterminated string"); if (src[i] === "\\") i++; i++; }
+      while (src[i] !== '"') { if (i >= src.length || src[i] === "\n") throw new HolvError("E001", line, scol, "unterminated string", "close the string with \" on the same line; strings cannot span lines"); if (src[i] === "\\") i++; i++; }
       i++; col += i - start;
       push("string", JSON.parse(src.slice(start, i)), scol); continue;
     }
     for (const op of OPS2) if (src.startsWith(op, i)) { push(op, op, scol); i += 2; col += 2; continue outer; }
     if (OPS1.includes(c)) { push(c, c, scol); i++; col++; continue; }
-    throw new HolvError("E002", line, col, `unexpected character ${JSON.stringify(c)}`);
+    throw new HolvError("E002", line, col, `unexpected character ${JSON.stringify(c)}`, `remove ${JSON.stringify(c)}; holv operators are + - * / div mod == != < <= > >= and or not, see holvc spec`);
   }
   push("eof", "", col);
   return { toks, comments };
@@ -70,30 +75,31 @@ class Parser {
   eat(t) { return this.at(t) ? this.toks[this.p++] : null; }
   expect(t, what = JSON.stringify(t)) {
     const k = this.peek();
-    if (k.t !== t) throw new HolvError("E010", k.line, k.col, `expected ${what}, got ${k.t === "eof" ? "end of file" : JSON.stringify(k.v)}`);
+    if (k.t !== t) throw new HolvError("E010", k.line, k.col, `expected ${what}, got ${k.t === "eof" ? "end of file" : JSON.stringify(k.v)}`, `insert ${what} before ${k.t === "eof" ? "the end of the file" : JSON.stringify(k.v)}`, { expected: what, got: k.t === "eof" ? "end of file" : k.v });
     return this.toks[this.p++];
   }
   ident() { return this.expect("ident", "identifier").v; }
+  upperName() { const k = this.peek(); const name = this.ident(); if (!/^[A-Z]/.test(name)) throw new HolvError("E012", k.line, k.col, `type and cap names start uppercase: ${name}`, { do: `rename ${name} to ${name[0].toUpperCase() + name.slice(1)} everywhere`, replace: name, with: name[0].toUpperCase() + name.slice(1) }); return name; }
   pos(k) { return { line: k.line, col: k.col }; }
 
   program() {
     const k = this.peek();
     if (!(k.t === "ident" && k.v === "holv" && this.peek(1).t === "int"))
-      throw new HolvError("E003", k.line, k.col, `file must start with 'holv ${LANG_VERSION}'`, { insert_line_1: `holv ${LANG_VERSION}` });
+      throw new HolvError("E003", k.line, k.col, `file must start with 'holv ${LANG_VERSION}'`, { do: `insert the line 'holv ${LANG_VERSION}' as line 1`, insert_line_1: `holv ${LANG_VERSION}` });
     this.p += 2;
     const items = [];
     while (!this.at("eof")) {
       if (this.at("type")) items.push(this.typeDecl());
       else if (this.at("cap")) items.push(this.capDecl());
       else if (this.at("fn")) items.push(this.fnDecl());
-      else { const t = this.peek(); throw new HolvError("E011", t.line, t.col, `expected type, cap or fn, got ${JSON.stringify(t.v)}`); }
+      else { const t = this.peek(); throw new HolvError("E011", t.line, t.col, `expected type, cap or fn, got ${JSON.stringify(t.v)}`, "only type, cap and fn declarations are allowed at the top level; move statements into a fn body"); }
     }
     return items;
   }
   typeRef() {
     const k = this.peek();
     const name = this.ident();
-    if (!/^[A-Z]/.test(name)) throw new HolvError("E012", k.line, k.col, `type names start uppercase: ${name}`);
+    if (!/^[A-Z]/.test(name)) throw new HolvError("E012", k.line, k.col, `type names start uppercase: ${name}`, { do: `rename ${name} to ${name[0].toUpperCase() + name.slice(1)} everywhere`, replace: name, with: name[0].toUpperCase() + name.slice(1) });
     const args = [];
     if (this.eat("<")) { do args.push(this.typeRef()); while (this.eat(",")); this.expect(">"); }
     return { name, args, ...this.pos(k) };
@@ -103,9 +109,9 @@ class Parser {
     while (!this.at("}")) { const k = this.peek(); const name = this.ident(); this.expect(":"); out.push({ name, type: this.typeRef(), ...this.pos(k) }); if (!this.eat(",")) break; }
     this.expect("}"); return out;
   }
-  typeDecl() { const k = this.expect("type"); const name = this.ident(); return { k: "type", name, fields: this.fields(), ...this.pos(k) }; }
+  typeDecl() { const k = this.expect("type"); const name = this.upperName(); return { k: "type", name, fields: this.fields(), ...this.pos(k) }; }
   capDecl() {
-    const k = this.expect("cap"); const name = this.ident(); const methods = [];
+    const k = this.expect("cap"); const name = this.upperName(); const methods = [];
     this.expect("{");
     while (!this.at("}")) {
       const m = this.peek(); const mname = this.ident(); const params = this.params(); this.expect(":");
@@ -203,7 +209,7 @@ class Parser {
       }
       return { k: "ident", name, ...p };
     }
-    throw new HolvError("E013", k.line, k.col, `unexpected ${k.t === "eof" ? "end of file" : JSON.stringify(k.v)}`);
+    throw new HolvError("E013", k.line, k.col, `unexpected ${k.t === "eof" ? "end of file" : JSON.stringify(k.v)}`, "complete the expression before this token: a value, a name, a call, or a parenthesised expression is missing");
   }
 }
 
@@ -239,17 +245,19 @@ class Checker {
     this.structs = new Map(); this.caps = new Map(); this.fns = new Map();
     for (const it of items) {
       const reg = it.k === "type" ? this.structs : it.k === "cap" ? this.caps : this.fns;
-      if (this.structs.has(it.name) || this.caps.has(it.name) || this.fns.has(it.name)) this.err("E041", it, `duplicate name ${it.name}`);
+      if (this.structs.has(it.name) || this.caps.has(it.name) || this.fns.has(it.name)) this.err("E041", it, `duplicate name ${it.name}`, `rename this ${it.k}; ${it.name} is already declared in this file`);
       reg.set(it.name, it);
     }
   }
-  err(code, at, msg, fix) { this.errors.push(new HolvError(code, at.line, at.col, msg, fix)); return ERR; }
+  err(code, at, msg, fix, extra) { this.errors.push(new HolvError(code, at.line, at.col, msg, fix, extra)); return ERR; }
+  resolveName(t) { return t.name === "List" ? `List<${this.resolveName(t.args[0])}>` : t.name; }
+  known() { return ["Int", "Float", "String", "Bool", "Unit", "List<T>", ...this.structs.keys(), ...this.caps.keys()]; }
   resolve(t) {
     if (T[t.name]) return T[t.name];
-    if (t.name === "List") { if (t.args.length !== 1) return this.err("E040", t, "List takes one type argument"); return listT(this.resolve(t.args[0])); }
+    if (t.name === "List") { if (t.args.length !== 1) return this.err("E040", t, "List takes one type argument", "write List<T> with exactly one element type"); return listT(this.resolve(t.args[0])); }
     if (this.structs.has(t.name)) return { k: "struct", n: t.name };
     if (this.caps.has(t.name)) return { k: "cap", n: t.name };
-    return this.err("E040", t, `unknown type ${t.name}`);
+    return this.err("E040", t, `unknown type ${t.name}`, `declare 'type ${t.name} { ... }' or 'cap ${t.name} { ... }', or use one of the known types`, { known: this.known() });
   }
   run() {
     for (const s of this.structs.values()) for (const f of s.fields) this.resolve(f.type);
@@ -259,10 +267,10 @@ class Checker {
       for (const p of f.params) env.set(p.name, { t: this.resolve(p.type), mut: false });
       const ret = this.resolve(f.ret);
       const got = this.block(f.body, env, true);
-      if (!same(got, ret)) this.err("E050", f.body.tail ?? f, `fn ${f.name} returns ${show(got)}, declared ${show(ret)}`);
+      if (!same(got, ret)) this.err("E050", f.body.tail ?? f, `fn ${f.name} returns ${show(got)}, declared ${show(ret)}`, `make the last expression of fn ${f.name} a ${show(ret)}, or change its declared return type to ${show(got)}`, { expected: show(ret), got: show(got) });
       for (const ex of f.examples) {
         const a = this.expr(ex.call, env), b = this.expr(ex.expected, env);
-        if (!same(a, b)) this.err("E051", ex, `example types differ: ${show(a)} vs ${show(b)}`);
+        if (!same(a, b)) this.err("E051", ex, `example types differ: ${show(a)} vs ${show(b)}`, `the expected value after == must be a ${show(a)}`, { expected: show(a), got: show(b) });
       }
     }
     return this.errors;
@@ -272,17 +280,17 @@ class Checker {
     for (const s of b.stmts) {
       if (s.k === "let") {
         let t = this.expr(s.expr, env);
-        if (s.type) { const want = this.resolve(s.type); if (!same(t, want)) this.err("E052", s, `${s.name}: declared ${show(want)}, got ${show(t)}`); t = want; }
-        else if (t.k === "list" && t.el.k === "any") this.err("E053", s, `${s.name}: annotate the element type, e.g. 'let ${s.name}: List<T> = List.new()'`);
+        if (s.type) { const want = this.resolve(s.type); if (!same(t, want)) this.err("E052", s, `${s.name}: declared ${show(want)}, got ${show(t)}`, `make the value a ${show(want)} or change the annotation to ${show(t)}`, { expected: show(want), got: show(t) }); t = want; }
+        else if (t.k === "list" && t.el.k === "any") this.err("E053", s, `${s.name}: List.new() needs an element type`, `write 'let ${s.name}: List<T> = List.new()' with the element type in place of T`);
         env.set(s.name, { t, mut: s.mut });
       } else if (s.k === "assign") {
         const v = env.get(s.name);
-        if (!v) { this.err("E030", s, `unknown name ${s.name}`); continue; }
-        if (!v.mut) this.err("E054", s, `${s.name} is immutable; declare it with 'var'`, { replace: `let ${s.name}`, with: `var ${s.name}` });
+        if (!v) { this.err("E030", s, `unknown name ${s.name}`, `declare ${s.name} with let or var before this line, or fix the spelling`, { scope: [...env.keys()] }); continue; }
+        if (!v.mut) this.err("E054", s, `${s.name} is immutable; declare it with 'var'`, { do: `change 'let ${s.name}' to 'var ${s.name}' where it is declared`, replace: `let ${s.name}`, with: `var ${s.name}` });
         const t = this.expr(s.expr, env);
-        if (!same(t, v.t)) this.err("E052", s, `${s.name}: is ${show(v.t)}, assigned ${show(t)}`);
+        if (!same(t, v.t)) this.err("E052", s, `${s.name}: is ${show(v.t)}, assigned ${show(t)}`, `assign a ${show(v.t)} to ${s.name}; a variable never changes type`, { expected: show(v.t), got: show(t) });
       } else if (s.k === "for") {
-        for (const e of [s.from, s.to]) { const t = this.expr(e, env); if (!same(t, T.Int)) this.err("E055", e, `for bounds must be Int, got ${show(t)}`); }
+        for (const e of [s.from, s.to]) { const t = this.expr(e, env); if (!same(t, T.Int)) this.err("E055", e, `for bounds must be Int, got ${show(t)}`, "make both bounds Int: use div instead of /, or floor() on a Float", { expected: "Int", got: show(t) }); }
         const inner = new Map(env); inner.set(s.v, { t: T.Int, mut: false });
         this.block(s.body, inner, false);
       } else this.expr(s.expr, env);
@@ -298,33 +306,33 @@ class Checker {
       case "ident": {
         const v = env.get(e.name); if (v) return v.t;
         if (this.fns.has(e.name)) { const f = this.fns.get(e.name); return { k: "fn", params: f.params.map((p) => this.resolve(p.type)), ret: this.resolve(f.ret) }; }
-        return this.err("E030", e, `unknown name ${e.name}`);
+        return this.err("E030", e, `unknown name ${e.name}`, `declare ${e.name} with let or var, add it as a parameter, or fix the spelling`, { scope: [...env.keys(), ...this.fns.keys()] });
       }
-      case "neg": { const t = this.expr(e.e, env); return isNum(t) || t.k === "err" ? t : this.err("E031", e, `negation needs Int or Float, got ${show(t)}`); }
-      case "not": { const t = this.expr(e.e, env); return same(t, T.Bool) ? T.Bool : this.err("E031", e, `not needs Bool, got ${show(t)}`); }
+      case "neg": { const t = this.expr(e.e, env); return isNum(t) || t.k === "err" ? t : this.err("E031", e, `negation needs Int or Float, got ${show(t)}`, "remove the minus or apply it to a number", { expected: "Int or Float", got: show(t) }); }
+      case "not": { const t = this.expr(e.e, env); return same(t, T.Bool) ? T.Bool : this.err("E031", e, `not needs Bool, got ${show(t)}`, "apply not to a comparison or a Bool value", { expected: "Bool", got: show(t) }); }
       case "bin": {
         const l = this.expr(e.l, env), r = this.expr(e.r, env);
         if (l.k === "err" || r.k === "err") return ERR;
         const op = e.op;
-        if (op === "and" || op === "or") return same(l, T.Bool) && same(r, T.Bool) ? T.Bool : this.err("E031", e, `${op} needs Bool and Bool, got ${show(l)} and ${show(r)}`);
-        if (!same(l, r)) return this.err("E031", e, `${op}: ${show(l)} and ${show(r)} differ`, isNum(l) && isNum(r) ? { hint: "wrap the Int side in toFloat()" } : undefined);
-        if (op === "==" || op === "!=") return l.k === "prim" ? T.Bool : this.err("E031", e, `${op} only compares Int, Float, String, Bool`);
-        if (["<", ">", "<=", ">="].includes(op)) return isNum(l) || same(l, T.String) ? T.Bool : this.err("E031", e, `${op} needs Int, Float or String, got ${show(l)}`);
+        if (op === "and" || op === "or") return same(l, T.Bool) && same(r, T.Bool) ? T.Bool : this.err("E031", e, `${op} needs Bool and Bool, got ${show(l)} and ${show(r)}`, `make both sides of ${op} comparisons or Bool values`, { expected: "Bool and Bool", got: `${show(l)} and ${show(r)}` });
+        if (!same(l, r)) return this.err("E031", e, `${op}: ${show(l)} and ${show(r)} differ`, isNum(l) && isNum(r) ? `wrap the Int side in toFloat(), or use floor() on the Float side if the result should be Int` : `make both sides of ${op} the same type`, { left: show(l), right: show(r) });
+        if (op === "==" || op === "!=") return l.k === "prim" ? T.Bool : this.err("E031", e, `${op} only compares Int, Float, String, Bool`, `compare a field of the ${show(l)} instead, e.g. a.id ${op} b.id`, { got: show(l) });
+        if (["<", ">", "<=", ">="].includes(op)) return isNum(l) || same(l, T.String) ? T.Bool : this.err("E031", e, `${op} needs Int, Float or String, got ${show(l)}`, `compare a field of the ${show(l)} instead`, { expected: "Int, Float or String", got: show(l) });
         if (op === "+" && same(l, T.String)) return T.String;
-        if (op === "div" || op === "mod") return same(l, T.Int) ? T.Int : this.err("E031", e, `${op} needs Int, got ${show(l)}`);
-        if (op === "/") return same(l, T.Float) ? T.Float : this.err("E032", e, `/ needs Float; for Int use div`, { replace: "/", with: "div" });
-        return isNum(l) ? l : this.err("E031", e, `${op} needs Int or Float, got ${show(l)}`);
+        if (op === "div" || op === "mod") return same(l, T.Int) ? T.Int : this.err("E031", e, `${op} needs Int, got ${show(l)}`, `use / for Float division, or floor() both sides to get Int`, { expected: "Int", got: show(l) });
+        if (op === "/") return same(l, T.Float) ? T.Float : this.err("E032", e, `/ needs Float; for Int use div`, { do: "replace / with div for integer division, or wrap both sides in toFloat() for Float division", replace: "/", with: "div" }, { got: show(l) });
+        return isNum(l) ? l : this.err("E031", e, `${op} needs Int or Float, got ${show(l)}`, op === "+" ? "+ joins two Strings or adds two numbers; convert with str() to join" : `apply ${op} to numbers`, { expected: "Int or Float", got: show(l) });
       }
       case "field": {
         const t = this.expr(e.obj, env); if (t.k === "err") return ERR;
         if (t.k === "list" && e.name === "len") return T.Int;
-        if (t.k === "struct") { const f = this.structs.get(t.n).fields.find((f) => f.name === e.name); return f ? this.resolve(f.type) : this.err("E033", e, `${t.n} has no field ${e.name}`); }
-        return this.err("E033", e, `${show(t)} has no field ${e.name}`);
+        if (t.k === "struct") { const s = this.structs.get(t.n), f = s.fields.find((f) => f.name === e.name); return f ? this.resolve(f.type) : this.err("E033", e, `${t.n} has no field ${e.name}`, `use one of the fields of ${t.n}, or add ${e.name} to its type declaration`, { fields: s.fields.map((f) => f.name) }); }
+        return this.err("E033", e, `${show(t)} has no field ${e.name}`, t.k === "list" ? "List has only .len; use xs[i] to read an element" : `${show(t)} has no fields; only declared types and List have`);
       }
       case "index": {
         const t = this.expr(e.obj, env), i = this.expr(e.idx, env); if (t.k === "err") return ERR;
-        if (t.k !== "list") return this.err("E033", e, `cannot index ${show(t)}`);
-        if (!same(i, T.Int)) this.err("E031", e.idx, `index must be Int, got ${show(i)}`);
+        if (t.k !== "list") return this.err("E033", e, `cannot index ${show(t)}`, "only a List<T> can be indexed with [i]");
+        if (!same(i, T.Int)) this.err("E031", e.idx, `index must be Int, got ${show(i)}`, "use an Int index; floor() converts a Float", { expected: "Int", got: show(i) });
         return t.el;
       }
       case "call": {
@@ -333,7 +341,7 @@ class Checker {
           return this.checkArgs(e, b.params, e.args, env, e.callee.name) ? b.ret : ERR;
         }
         const ft = this.expr(e.callee, env); if (ft.k === "err") return ERR;
-        if (ft.k !== "fn") return this.err("E034", e, `cannot call ${show(ft)}`);
+        if (ft.k !== "fn") return this.err("E034", e, `cannot call ${show(ft)}`, `${e.callee.name ?? "this value"} is a ${show(ft)}, not a fn; remove the parentheses or call a declared fn`);
         return this.checkArgs(e, ft.params, e.args, env, e.callee.name ?? "function") ? ft.ret : ERR;
       }
       case "method": {
@@ -341,39 +349,39 @@ class Checker {
         const t = this.expr(e.obj, env); if (t.k === "err") return ERR;
         if (t.k === "cap") {
           const m = this.caps.get(t.n).methods.find((m) => m.name === e.name);
-          if (!m) return this.err("E033", e, `cap ${t.n} has no method ${e.name}`);
+          if (!m) return this.err("E033", e, `cap ${t.n} has no method ${e.name}`, `use one of the methods of cap ${t.n}, or add ${e.name} to its declaration and to its implementation`, { methods: this.caps.get(t.n).methods.map((m) => m.name) });
           return this.checkArgs(e, m.params.map((p) => this.resolve(p.type)), e.args, env, `${t.n}.${e.name}`) ? this.resolve(m.ret) : ERR;
         }
         if (t.k === "list") {
           if (e.name === "push") return this.checkArgs(e, [t.el], e.args, env, "push") ? T.Unit : ERR;
           if (e.name === "sortBy") {
             const f = e.args[0];
-            if (e.args.length !== 1 || f.k !== "lambda" || f.params.length !== 2) return this.err("E034", e, "sortBy takes one fn(a, b) { ... } returning Int");
+            if (e.args.length !== 1 || f.k !== "lambda" || f.params.length !== 2) return this.err("E034", e, "sortBy takes one fn(a, b) { ... } returning Int", "write xs.sortBy(fn(a, b) { ... }) with a body that returns a negative, zero or positive Int");
             const inner = new Map(env); for (const p of f.params) inner.set(p.name, { t: t.el, mut: false });
             const r = this.block(f.body, inner, true);
-            if (!same(r, T.Int)) this.err("E050", f, `sortBy comparator returns ${show(r)}, must be Int`);
+            if (!same(r, T.Int)) this.err("E050", f, `sortBy comparator returns ${show(r)}, must be Int`, "return an Int: a.x - b.x, or if a.x < b.x { -1 } else { 1 }", { expected: "Int", got: show(r) });
             return T.Unit;
           }
-          return this.err("E033", e, `List has no method ${e.name} (push, sortBy, len)`);
+          return this.err("E033", e, `List has no method ${e.name}`, "List supports push(v), sortBy(fn), and the field len", { methods: ["push", "sortBy"] });
         }
-        return this.err("E033", e, `${show(t)} has no method ${e.name}`);
+        return this.err("E033", e, `${show(t)} has no method ${e.name}`, "only caps and List have methods; call a declared fn with the value as an argument instead");
       }
       case "struct": {
-        const s = this.structs.get(e.name); if (!s) return this.err("E040", e, `unknown type ${e.name}`);
+        const s = this.structs.get(e.name); if (!s) return this.err("E040", e, `unknown type ${e.name}`, `declare 'type ${e.name} { ... }' before using it as a literal`, { known: this.known() });
         for (const f of s.fields) {
           const given = e.fields.find((g) => g.name === f.name);
-          if (!given) { this.err("E056", e, `${e.name} literal missing field ${f.name}`); continue; }
+          if (!given) { this.err("E056", e, `${e.name} literal missing field ${f.name}`, `add ${f.name}: <${this.resolveName(f.type)}> to the literal; every field is required`, { missing: f.name, fields: s.fields.map((f) => f.name) }); continue; }
           const t = this.expr(given.expr, env), want = this.resolve(f.type);
-          if (!same(t, want)) this.err("E052", given, `${e.name}.${f.name}: expected ${show(want)}, got ${show(t)}`);
+          if (!same(t, want)) this.err("E052", given, `${e.name}.${f.name}: expected ${show(want)}, got ${show(t)}`, `give ${f.name} a ${show(want)} value`, { expected: show(want), got: show(t) });
         }
-        for (const g of e.fields) if (!s.fields.some((f) => f.name === g.name)) this.err("E056", g, `${e.name} has no field ${g.name}`);
+        for (const g of e.fields) if (!s.fields.some((f) => f.name === g.name)) this.err("E056", g, `${e.name} has no field ${g.name}`, `remove ${g.name} from the literal, or add it to type ${e.name}`, { extra: g.name, fields: s.fields.map((f) => f.name) });
         return { k: "struct", n: e.name };
       }
-      case "lambda": return this.err("E034", e, "fn literals are only allowed as the argument of sortBy in holv 0");
+      case "lambda": return this.err("E034", e, "fn literals are only allowed as the argument of sortBy in holv 0", "declare a named fn at the top level and call it, or pass the fn literal directly to sortBy");
       case "if": {
-        const c = this.expr(e.cond, env); if (!same(c, T.Bool)) this.err("E031", e.cond, `if condition must be Bool, got ${show(c)}`);
+        const c = this.expr(e.cond, env); if (!same(c, T.Bool)) this.err("E031", e.cond, `if condition must be Bool, got ${show(c)}`, "write a comparison, e.g. if x != 0 { ... }", { expected: "Bool", got: show(c) });
         const a = this.block(e.then, env, true), b = this.block(e.else, env, true);
-        if (!same(a, b)) return this.err("E057", e, `if branches differ: ${show(a)} vs ${show(b)}`);
+        if (!same(a, b)) return this.err("E057", e, `if branches differ: ${show(a)} vs ${show(b)}`, `make the else branch a ${show(a)}, or both branches Unit if the if is a statement`, { then: show(a), else: show(b) });
         return a;
       }
       case "hole": return this.resolve(e.type);
@@ -381,9 +389,9 @@ class Checker {
     }
   }
   checkArgs(at, params, args, env, name) {
-    if (params.length !== args.length) { this.err("E035", at, `${name} takes ${params.length} argument(s), got ${args.length}`); return false; }
+    if (params.length !== args.length) { this.err("E035", at, `${name} takes ${params.length} argument(s), got ${args.length}`, `call ${name} with exactly ${params.length} argument(s): (${params.map(show).join(", ")})`, { expected: params.length, got: args.length, params: params.map(show) }); return false; }
     let ok = true;
-    args.forEach((a, i) => { const t = this.expr(a, env); if (!same(t, params[i])) { this.err("E052", a, `${name} argument ${i + 1}: expected ${show(params[i])}, got ${show(t)}`); ok = false; } });
+    args.forEach((a, i) => { const t = this.expr(a, env); if (!same(t, params[i])) { this.err("E052", a, `${name} argument ${i + 1}: expected ${show(params[i])}, got ${show(t)}`, `pass a ${show(params[i])} as argument ${i + 1} of ${name}`, { expected: show(params[i]), got: show(t) }); ok = false; } });
     return ok;
   }
 }
@@ -397,14 +405,14 @@ function checkEffects(items) {
   const errors = [];
   for (const f of fns) {
     const declared = fnEff.get(f.name);
-    for (const e of f.effects) if (!caps.has(e.name)) errors.push(new HolvError("E020", e.line, e.col, `fn ${f.name}: unknown effect ${e.name}`));
+    for (const e of f.effects) if (!caps.has(e.name)) errors.push(new HolvError("E020", e.line, e.col, `fn ${f.name}: unknown effect ${e.name}`, `declare 'cap ${e.name} { ... }' or remove ${e.name} from the effects line`, { known: [...caps] }));
     for (const p of f.params) if (caps.has(p.type.name) && !declared.includes(p.type.name))
-      errors.push(new HolvError("E021", p.line, p.col, `fn ${f.name}: takes capability ${p.name}: ${p.type.name} but does not declare 'effects ${p.type.name}'`, { fn: f.name, add_effect: p.type.name }));
+      errors.push(new HolvError("E021", p.line, p.col, `fn ${f.name}: takes capability ${p.name}: ${p.type.name} but does not declare 'effects ${p.type.name}'`, { do: `add 'effects ${p.type.name}' on the line after the signature of fn ${f.name}${declared.length ? ` (it already has effects ${declared.join(", ")}; append it there)` : ""}`, fn: f.name, add_effect: p.type.name }));
     const walk = (n) => {
       if (!n || typeof n !== "object") return;
       if (n.k === "call" && n.callee.k === "ident" && fnEff.has(n.callee.name))
         for (const e of fnEff.get(n.callee.name)) if (!declared.includes(e))
-          errors.push(new HolvError("E022", n.callee.line, n.callee.col, `fn ${f.name} calls ${n.callee.name} which has effect ${e}`, { fn: f.name, add_effect: e }));
+          errors.push(new HolvError("E022", n.callee.line, n.callee.col, `fn ${f.name} calls ${n.callee.name} which has effect ${e}`, { do: `add 'effects ${e}' to fn ${f.name}, and pass a ${e} capability down to it from its callers`, fn: f.name, add_effect: e }));
       for (const v of Object.values(n)) Array.isArray(v) ? v.forEach(walk) : walk(v);
     };
     walk(f.body);
@@ -457,6 +465,11 @@ function emitExpr(e, scope, fn) {
     case "bin":
       if (e.op === "div") return `Math.trunc(${x(e.l)} / ${x(e.r)})`;
       if (e.op === "mod") return `(${x(e.l)} % ${x(e.r)})`;
+      if (["==", "!=", "<", ">", "<=", ">="].includes(e.op)) {
+        // widen literal operands so tsc does not reject constant comparisons like 1 == 2 as "no overlap"
+        const w = (n) => ({ int: "number", float: "number", string: "string", bool: "boolean" })[n.k] ? `(${x(n)} as ${({ int: "number", float: "number", string: "string", bool: "boolean" })[n.k]})` : x(n);
+        return `(${w(e.l)} ${JSBIN[e.op] ?? e.op} ${w(e.r)})`;
+      }
       return `(${x(e.l)} ${JSBIN[e.op] ?? e.op} ${x(e.r)})`;
     case "field": return e.name === "len" ? `${x(e.obj)}.length` : `${x(e.obj)}.${e.name}`;
     case "index": return `at(${x(e.obj)}, ${x(e.idx)})`;
@@ -564,7 +577,7 @@ function findTsc() {
 function build(file, opts = {}) {
   // --caps takes a file, or a name resolved from caps/<name>/caps.ts (the reviewed wrapper set)
   const capsFile = !opts.caps ? null : /[/.]/.test(opts.caps) ? path.resolve(opts.caps) : path.join(HERE, "caps", opts.caps, "caps.ts");
-  if (capsFile && !fs.existsSync(capsFile)) { console.error(JSON.stringify({ file, code: "E062", msg: `no caps file ${capsFile}` })); process.exit(1); }
+  if (capsFile && !fs.existsSync(capsFile)) { console.error(JSON.stringify({ file, code: "E062", msg: `no caps file ${capsFile}`, fix: { do: "pass --caps with a path to a .ts file, or the name of a directory under caps/" } })); process.exit(1); }
   const { items, errors } = compile(file);
   if (!report(file, errors)) process.exit(1);
   const name = path.basename(file).replace(/\.holv$/, "");
@@ -573,19 +586,20 @@ function build(file, opts = {}) {
   fs.writeFileSync(path.join(outDir, `${name}.ts`), emit(items, path.basename(file)));
   fs.copyFileSync(path.join(HERE, "runtime.ts"), path.join(outDir, "runtime.ts"));
   const main = items.find((i) => i.k === "fn" && i.name === "main");
-  if (main) {
+  {
     const caps = new Set(items.filter((i) => i.k === "cap").map((i) => i.name));
     let argi = 0;
-    const args = main.params.map((p) => {
+    const args = (main?.params ?? []).map((p) => {
       if (caps.has(p.type.name)) return `caps.get(${JSON.stringify(p.type.name)}) as prog.${p.type.name}`;
       const i = argi++;
       if (p.type.name === "Int" || p.type.name === "Float") return `Number(args[${i}] ?? (() => { throw new Error("missing argument ${p.name}: ${p.type.name}"); })())`;
       if (p.type.name === "String") return `String(args[${i}] ?? "")`;
       if (p.type.name === "Bool") return `args[${i}] === "true"`;
-      throw new HolvError("E060", p.line, p.col, `main parameter ${p.name} must be a cap, Int, Float, String or Bool`);
+      throw new HolvError("E060", p.line, p.col, `main parameter ${p.name} must be a cap, Int, Float, String or Bool`, `change the type of ${p.name}: the driver can only supply capabilities and command-line scalars; build the ${p.type.name} inside main`);
     });
+    const call = main ? `prog.main(${args.join(", ")})` : `(() => { console.error(JSON.stringify({ file: ${JSON.stringify(path.basename(file))}, code: "E061", msg: "no fn main", fix: { do: "add fn main(...) -> Int; its parameters may be caps and Int, Float, String or Bool" } })); return 1; })()`;
     fs.writeFileSync(path.join(outDir, `${name}.run.ts`), `// generated by holvc; do not edit
-import { Caps, HoleReached, runExamples, proc } from "./runtime.ts";
+import { Caps, HoleReached, RuntimeError, runExamples, proc } from "./runtime.ts";
 import * as prog from "./${name}.ts";
 const argv = proc.argv.slice(2);
 const simulate = argv.includes("--simulate");
@@ -594,20 +608,23 @@ if (proc.env.HOLV_TEST) proc.exit(runExamples(prog.__examples) ? 0 : 1);
 const extra = proc.env.HOLV_CAPS ? (await import(proc.env.HOLV_CAPS)).default : {};
 const caps = new Caps(simulate, extra);
 try {
-  const code = prog.main(${args.join(", ")});
+  const code = ${call};
   if (simulate) caps.plan();
   proc.exit(code);
 } catch (e) {
-  if (e instanceof HoleReached) { console.error(JSON.stringify({ hole: e.at, type: e.type, scope: e.scope })); proc.exit(3); }
-  throw e;
+  if (e instanceof HoleReached) { console.error(JSON.stringify({ hole: e.at, type: e.type, scope: e.scope, fix: { do: \`replace \'hole \${e.type}\' in \${e.at.split(":")[0]} with an expression of type \${e.type}; the scope above is the real data at that point\` } })); proc.exit(3); }
+  const err = e instanceof Error ? e : new Error(String(e));
+  const fix = e instanceof RuntimeError ? e.fix : { do: "this is a runtime error in program code; reproduce with the same args and HOLV_SEED/HOLV_NOW, then fix the body that raised it" };
+  console.error(JSON.stringify({ error: err.name, msg: err.message, fix, ...(proc.env.HOLV_DEBUG ? { stack: err.stack } : {}) }));
+  proc.exit(4);
 }
 `);
   }
   const tsc = findTsc();
   if (tsc && !opts.skipTsc) {
     const r = spawnSync(tsc, ["--strict", "--noEmit", "--noUncheckedIndexedAccess", "--allowImportingTsExtensions", "--module", "nodenext", "--target", "es2022", "--skipLibCheck", path.join(outDir, `${name}.ts`), ...(main ? [path.join(outDir, `${name}.run.ts`)] : []), ...(capsFile ? [capsFile] : [])], { encoding: "utf8" });
-    if (r.status !== 0) { console.error(JSON.stringify({ file, code: "E090", msg: "tsc rejected the emitted TypeScript; this is a holvc bug", tsc: r.stdout.trim() })); process.exit(1); }
-  } else if (!opts.skipTsc) console.error(JSON.stringify({ file, warn: "tsc not found; independent typecheck skipped" }));
+    if (r.status !== 0) { console.error(JSON.stringify({ file, code: "E090", msg: "tsc rejected the emitted TypeScript; this is a holvc bug, not an error in your program", tsc: r.stdout.trim(), fix: { do: "do not edit the generated TypeScript; open an issue on holv with this .holv file and the tsc output" } })); process.exit(1); }
+  } else if (!opts.skipTsc) console.error(JSON.stringify({ file, warn: "tsc not found; independent typecheck skipped", fix: { do: "run pnpm install in the holv directory, or set HOLV_TSC to a tsc binary" } }));
   return { outDir, name, hasMain: !!main, capsFile };
 }
 function runNode(script, args, env = {}) {
@@ -625,7 +642,7 @@ try {
   else if (!file) { console.error(usage); process.exit(2); }
   else if (cmd === "check") { const { items, errors } = compile(file); if (!report(file, errors)) process.exit(1); console.log(JSON.stringify({ ok: true, file, fns: items.filter((i) => i.k === "fn").length })); }
   else if (cmd === "build") { const b = build(file); console.log(JSON.stringify({ ok: true, out: path.join(b.outDir, `${b.name}.ts`) })); }
-  else if (cmd === "run") { const b = build(file, { caps: capsOpt }); if (!b.hasMain) { console.error(JSON.stringify({ file, code: "E061", msg: "no fn main" })); process.exit(1); } runNode(path.join(b.outDir, `${b.name}.run.ts`), rest, b.capsFile ? { HOLV_CAPS: b.capsFile } : {}); }
+  else if (cmd === "run") { const b = build(file, { caps: capsOpt }); if (!b.hasMain) { console.error(JSON.stringify({ file, code: "E061", msg: "no fn main", fix: { do: "add fn main(...) -> Int; its parameters may be caps and Int, Float, String or Bool" } })); process.exit(1); } runNode(path.join(b.outDir, `${b.name}.run.ts`), rest, b.capsFile ? { HOLV_CAPS: b.capsFile } : {}); }
   else if (cmd === "test") { const b = build(file); runNode(path.join(b.outDir, `${b.name}.run.ts`), [], { HOLV_TEST: "1" }); }
   else if (cmd === "fmt") {
     const { items, comments } = compile(file); // fmt only needs a parse; type errors are reported by check

@@ -1,0 +1,3 @@
+holv 0
+-- expect: error E002
+fn f() -> Int { 1 # 2 }

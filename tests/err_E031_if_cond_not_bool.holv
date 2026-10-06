@@ -1,0 +1,3 @@
+holv 0
+-- expect: error E031
+fn f(a: Int) -> Int { if a { 1 } else { 2 } }

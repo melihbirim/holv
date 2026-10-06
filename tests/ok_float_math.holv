@@ -1,0 +1,12 @@
+holv 0
+-- expect: run => 2.5 3 2
+cap Out { print(s: String): Unit }
+fn main(out: Out) -> Int
+  effects Out
+{
+  let x = 5.0 / 2.0
+  let r = sqrt(9.0)
+  let f = floor(x)
+  out.print(str(x) + " " + str(r) + " " + str(f))
+  0
+}

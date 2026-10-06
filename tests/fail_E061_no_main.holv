@@ -1,0 +1,3 @@
+holv 0
+-- expect: run-fail E061
+fn f() -> Int { 1 }

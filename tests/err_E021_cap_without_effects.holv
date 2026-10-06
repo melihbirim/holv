@@ -1,0 +1,4 @@
+holv 0
+-- expect: error E021
+cap Clock { now(): Int }
+fn age(created: Int, clock: Clock) -> Int { clock.now() - created }

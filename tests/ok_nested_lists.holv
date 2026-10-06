@@ -1,0 +1,15 @@
+holv 0
+-- expect: run => 3 4
+cap Out { print(s: String): Unit }
+fn main(out: Out) -> Int
+  effects Out
+{
+  let grid: List<List<Int>> = List.new()
+  for i in 0 .. 3 {
+    let row: List<Int> = List.new()
+    for j in 0 .. 3 { row.push(i * j) }
+    grid.push(row)
+  }
+  out.print(str(grid.len) + " " + str(grid[2].len + grid[1][2] + grid[2][2] - 5))
+  0
+}

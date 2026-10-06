@@ -19,7 +19,7 @@ holv is built around those failure modes:
 - **No silent escapes.** No null. `Int` and `Float` never mix. `/` is Float-only. Out-of-range index stops the program. Both `if` branches must agree. `let` is immutable.
 - **Examples live in the signature.** `example score(...) == 1.25` sits above the body and runs with `holvc test`.
 - **One canonical form.** `holvc fmt` is idempotent. Diffs are semantic.
-- **Errors are JSON.** `{"code","line","col","msg","fix"}`. When the fix is mechanical, `fix` says exactly what to change.
+- **Errors are JSON, and every one says what to do.** `{"code","line","col","msg",...facts,"fix":{"do":"..."}}`. `fix.do` is an imperative sentence; `expected`, `got`, `scope`, `fields`, `known` are the facts an agent would otherwise look up. Runtime errors have the same shape. The conformance suite rejects any error without `fix.do`.
 - **The spec fits in a prompt.** `holvc spec` prints it: 49 lines. A language with no training corpus must be learnable from context in one read.
 - **The compiler is not the trusted base.** holvc emits TypeScript and then runs `tsc --strict` on its own output. The type checker that matters is one Claude did not write. During the first build, tsc caught three bugs in holvc before anything ran.
 
@@ -62,20 +62,22 @@ pnpm install            # only for tsc
 ./holvc.mjs check examples/rank.holv          # types + effects, JSON errors
 ./holvc.mjs run examples/rank.holv 1000       # build, tsc, run
 ./holvc.mjs run examples/rank.holv 10 --simulate
-./holvc.mjs run examples/holed.holv 5         # stops at the hole, exit 3
+./holvc.mjs run tests/hole_stops_with_scope.holv 5   # stops at the hole, exit 3
 ./holvc.mjs test examples/rank.holv           # run `example` lines
 ./holvc.mjs run examples/npm/slug.holv "Hello World" --caps slugify   # an npm package behind a reviewed cap from caps/
 ./holvc.mjs fmt examples/rank.holv --write
-./test.sh                                     # the whole pipeline, 14 checks
+./test.sh                                     # every tests/*.holv conformance file plus integration checks
 ```
 
-What a rejected file looks like ([examples/bad.holv](examples/bad.holv)):
+What a rejected file looks like ([tests/err_multiple_in_one_file.holv](tests/err_multiple_in_one_file.holv)). Every error says what is wrong, the facts around it, and what to do; the suite rejects any error without `fix.do`:
 
 ```
-{"code":"E021","line":8,"col":22,"msg":"fn age: takes capability clock: Clock but does not declare 'effects Clock'","fix":{"fn":"age","add_effect":"Clock"}}
-{"code":"E032","line":21,"col":19,"msg":"/ needs Float; for Int use div","fix":{"replace":"/","with":"div"}}
-{"code":"E054","line":24,"col":3,"msg":"total is immutable; declare it with 'var'","fix":{"replace":"let total","with":"var total"}}
+{"code":"E021","line":6,"col":22,"msg":"fn age: takes capability clock: Clock but does not declare 'effects Clock'","fix":{"do":"add 'effects Clock' on the line after the signature of fn age","fn":"age","add_effect":"Clock"}}
+{"code":"E032","line":13,"col":19,"msg":"/ needs Float; for Int use div","got":"Int","fix":{"do":"replace / with div for integer division, or wrap both sides in toFloat() for Float division","replace":"/","with":"div"}}
+{"code":"E056","line":12,"col":11,"msg":"Post literal missing field up","missing":"up","fields":["id","up"],"fix":{"do":"add up: <Int> to the literal; every field is required"}}
 ```
+
+Runtime errors are JSON with the same shape and exit 4, never a stack trace.
 
 ## Against other languages
 

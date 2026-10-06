@@ -1,0 +1,5 @@
+holv 0
+-- expect: examples-fail
+fn double(a: Int) -> Int
+  example double(2) == 5
+{ a * 2 }

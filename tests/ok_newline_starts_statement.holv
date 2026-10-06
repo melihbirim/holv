@@ -1,0 +1,12 @@
+holv 0
+-- expect: run => 7
+-- a `(` or `[` on a new line is a new statement, never a call or index of the previous line
+cap Out { print(s: String): Unit }
+fn main(out: Out) -> Int
+  effects Out
+{
+  let a = 2 + 5
+  (a)
+  out.print(str(a))
+  0
+}

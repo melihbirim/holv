@@ -1,0 +1,19 @@
+holv 0
+-- expect: run => 2
+-- comments before items, inside blocks and before the tail must survive fmt
+cap Out { print(s: String): Unit }
+
+-- before a fn
+fn main(out: Out) -> Int
+  effects Out
+{
+  -- first statement
+  let a = 1
+  -- before the loop
+  for i in 0 .. 1 {
+    -- inside the loop
+    out.print(str(a + 1))
+  }
+  -- before the tail
+  0
+}

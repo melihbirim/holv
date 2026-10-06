@@ -1,0 +1,15 @@
+holv 0
+-- expect: run => c b a
+type Item { name: String, rank: Int }
+cap Out { print(s: String): Unit }
+fn main(out: Out) -> Int
+  effects Out
+{
+  let xs: List<Item> = List.new()
+  xs.push(Item { name: "a", rank: 1 })
+  xs.push(Item { name: "b", rank: 2 })
+  xs.push(Item { name: "c", rank: 3 })
+  xs.sortBy(fn(a, b) { b.rank - a.rank })
+  out.print(xs[0].name + " " + xs[1].name + " " + xs[2].name)
+  0
+}

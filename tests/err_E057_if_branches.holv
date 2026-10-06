@@ -1,0 +1,3 @@
+holv 0
+-- expect: error E057
+fn f(b: Bool) -> Int { if b { 1 } else { "two" } }
