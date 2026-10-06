@@ -1,0 +1,13 @@
+holv 0
+
+-- expect: run-fail "error":"CapabilityFailed","at":{"fn":"main","line":11,"col":14}
+-- the built-in Rng has no `boom`; a cap whose implementation throws is reported at the holv call site
+cap Rng { next(): Int, boom(): Int }
+
+fn main(rng: Rng) -> Int
+  effects Rng
+{
+  let a = rng.next()
+  let b = rng.boom()
+  a + b
+}

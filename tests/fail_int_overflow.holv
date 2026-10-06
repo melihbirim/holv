@@ -1,6 +1,6 @@
 holv 0
 
--- expect: run-fail IntOverflow
+-- expect: run-fail "at":{"fn":"main","line":8,"col":11}
 -- args: 20
 fn main(n: Int) -> Int {
   var x = 1

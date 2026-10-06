@@ -11,24 +11,44 @@ export class HoleReached extends Error {
   }
 }
 export function hole<T>(at: string, type: string, scope: Record<string, unknown>): T {
-  throw new HoleReached(at, type, scope);
+  throw new HoleReached(at, type, scope); // at is "fn:line:col"
 }
 
 // Runtime errors carry a fix like compile errors do; the driver prints them as JSON and never a stack trace.
+// `at` is "fn:line:col" in the .holv source, emitted by the compiler at every place a runtime error can start.
+export type Where = { fn: string; line: number; col: number };
 export class RuntimeError extends Error {
-  fix: { do: string };
-  constructor(name: string, msg: string, fix: string) { super(msg); this.name = name; this.fix = { do: fix }; }
+  fix: { do: string }; at?: string;
+  constructor(name: string, msg: string, fix: string, at?: string) { super(msg); this.name = name; this.fix = { do: fix }; this.at = at; }
+}
+export function where(at: string): Where { const [fn, line, col] = at.split(":"); return { fn: fn ?? "?", line: Number(line ?? 0), col: Number(col ?? 0) }; }
+// Errors thrown by plain JS (stack overflow, a cap implementation) have no holv position; the fn name from the first
+// program frame is the best we can do without source maps.
+export function fromStack(e: Error): Where {
+  const m = (e.stack ?? "").match(/\n\s+at (?:Module\.)?([A-Za-z_]\w*) \([^)]*\.ts:\d+:\d+\)/);
+  return { fn: m?.[1] ?? "?", line: 0, col: 0 };
 }
 // Int is a 53-bit safe integer. Every Int + - * neg and floor() result passes through here.
-export function ck(n: number): number {
+export function ck(n: number, at: string): number {
   if (!Number.isSafeInteger(n))
-    throw new RuntimeError("IntOverflow", `Int result ${n} is outside the safe range ±9007199254740991`, "use Float for values this large, or restructure the arithmetic (e.g. divide before multiplying); Int is a 53-bit integer");
+    throw new RuntimeError("IntOverflow", `Int result ${n} is outside the safe range ±9007199254740991`, "use Float for values this large, or restructure the arithmetic (e.g. divide before multiplying); Int is a 53-bit integer", at);
   return n;
 }
-export function at<T>(xs: T[], i: number): T {
+export function at<T>(xs: T[], i: number, at: string): T {
   if (!Number.isInteger(i) || i < 0 || i >= xs.length)
-    throw new RuntimeError("IndexOutOfRange", `index ${i} out of range for a List of length ${xs.length}`, `guard the index with 'if i < xs.len { ... }' or fix the arithmetic that produced ${i}`);
+    throw new RuntimeError("IndexOutOfRange", `index ${i} out of range for a List of length ${xs.length}`, `guard the index with 'if i < xs.len { ... }' or fix the arithmetic that produced ${i}`, at);
   return xs[i] as T;
+}
+// Every cap method call goes through here so a throwing implementation is reported at the holv call site.
+export function capCall<T>(name: string, at: string, f: () => T): T {
+  try { return f(); }
+  catch (e) {
+    // errors that already come from holv (a hole, a check, a nested cap) keep their own position
+    if (e instanceof HoleReached) throw e;
+    if (e instanceof RuntimeError) { e.at ??= at; throw e; }
+    const msg = e instanceof Error ? e.message : String(e);
+    throw new RuntimeError("CapabilityFailed", `${name} threw: ${msg}`, `the implementation of ${name} failed for these arguments; check the caps file that provides it, or the arguments at this call site`, at);
+  }
 }
 
 export function runExamples(exs: Array<[string, () => unknown, unknown]>): boolean {

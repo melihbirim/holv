@@ -1,6 +1,6 @@
 holv 0
 
--- expect: run-fail out of range
+-- expect: run-fail "at":{"fn":"main","line":7,"col":5}
 fn main(n: Int) -> Int {
   let xs: List<Int> = List.new()
   xs.push(1)
