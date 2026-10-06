@@ -1,0 +1,37 @@
+holv 0
+
+-- expect: examples
+-- A REST API as a pure function of the request. The host owns the socket; the program owns the logic.
+-- The whole contract a reviewer needs is here: the types, the cap, and the effects line of handle.
+type Request { method: String, path: String, body: String }
+
+type Response { status: Int, body: String }
+
+cap Store { add(name: String): Int, count(): Int, get(i: Int): String }
+
+fn json(status: Int, body: String) -> Response
+  example json(200, "{}").status == 200
+{ Response { status: status, body: body } }
+
+-- KNOWN BUG: does not escape an embedded quote, so a name like bread "rye" yields invalid JSON.
+-- holv has no string replace or char access yet (#14); a JSON cap or builtin is the real fix.
+fn quote(s: String) -> String
+  example quote("a") == "\"a\""
+{ "\"" + s + "\"" }
+
+fn listItems(store: Store) -> String
+  effects Store
+{
+  var out = "["
+  for i in 0 .. store.count() {
+    out = out + if i == 0 { "" } else { "," } + "{\"id\":" + str(i) + ",\"name\":" + quote(store.get(i)) + "}"
+  }
+  out + "]"
+}
+
+fn handle(store: Store, req: Request) -> Response
+  effects Store
+{ if req.method == "GET" and req.path == "/items" { json(200, listItems(store)) } else { if req.method == "POST" and req.path == "/items" { if req.body == "" { json(400, "{\"error\":\"body must be the item name\"}") } else {
+  let id = store.add(req.body)
+  json(201, "{\"id\":" + str(id) + ",\"name\":" + quote(req.body) + "}")
+} } else { if req.method == "GET" and req.path == "/health" { json(200, "{\"ok\":true}") } else { json(404, "{\"error\":\"no route\",\"method\":" + quote(req.method) + ",\"path\":" + quote(req.path) + "}") } } } }
