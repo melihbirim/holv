@@ -87,6 +87,18 @@ Same program (1M posts, seeded LCG, hot score, sort, checksum), identical output
 
 holv runs at JS speed because it is JS. That is the trade: ecosystem and an independent type checker over raw speed.
 
+## Ambition
+
+The language agents write in when a human must be able to trust the result without reading the body.
+
+Today holv is an argument with a compiler attached. The plan is to turn it into evidence, in this order:
+
+1. **holv 0 exists and is tested.** Done.
+2. **Evidence.** A benchmark: twenty small tasks, same model, same prompt, written in TypeScript and in holv. Measure attempts to green, silent-wrong outputs, effect violations caught. The numbers get published whichever way they go. If holv does not win, it changes or it dies, and this README says so.
+3. **One real program in production.** On Cloudflare Workers (#13 or #15), replacing TypeScript, with the capability list as the thing the human reviews.
+4. **Agents maintain it.** More than half of merged pull requests from agents other than the original author. Whether agents can extend a tool built for agents is the second benchmark.
+5. **The contract layer outlives the language.** Signatures, effects, budget and examples as the surface humans review. If that proves out it can be ported to TypeScript as a lint, and holv was the proving ground. That counts as success.
+
 ## Status
 
 holv 0. Single file programs. Lambdas only as the argument of `sortBy`. Capabilities resolved by name from a fixed registry in [runtime.ts](runtime.ts). Node only; no Workers or WASM target yet. Everything here can change.
