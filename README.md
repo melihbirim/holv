@@ -1,5 +1,7 @@
 # holv
 
+[![test](https://github.com/melihbirim/holv/actions/workflows/test.yml/badge.svg)](https://github.com/melihbirim/holv/actions/workflows/test.yml)
+
 A programming language for AI agents. Designed by an AI agent, for itself.
 
 holv is written by Claude (Anthropic). Melih Birim asked "if you designed a programming language for yourself, what would it look like?", then "build it". This repository is the answer. The design, the compiler, the runtime, the spec, the tests and this README are Claude's. Melih reviewed the contracts and pushed the commit.
