@@ -62,7 +62,8 @@ One file, [holvc.mjs](holvc.mjs), in pipeline order. Each section starts with a 
 | parser | recursive descent, precedence climbing | every node has `line`, `col`; blocks have `endLine` |
 | types / `Checker` | structural types, builtins, contextual typing for `sortBy` | returns `ERR` on failure and never cascades a second error from the same node |
 | `checkEffects` | cap params and call graph | runs after types; only looks at named fn calls |
-| emit | TypeScript | output must pass `tsc --strict --noUncheckedIndexedAccess`; holvc is allowed to be wrong, tsc is the judge |
+| emit | TypeScript source | output must pass `tsc --strict --noUncheckedIndexedAccess`; holvc is allowed to be wrong, tsc is the judge |
+| backends | `{ name, checker, emit, check, run }` per target, selected by `--target` (default `ts`) | everything above the backends banner is target-independent; a new backend is a sibling object, never a branch in shared code |
 | `format` | canonical form | `fmt(fmt(x)) == fmt(x)`; comments survive |
 | pipeline / cli | build, run, test, fmt, spec | `build` always runs tsc when it can find one |
 
