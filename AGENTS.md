@@ -15,7 +15,7 @@ That is the whole language, 49 lines. There is no training corpus for holv. Ever
 The loop. Do not skip steps, do not reorder them.
 
 1. Write the signatures first: `type`, `cap`, every `fn` header with `effects` and at least one `example`. Leave bodies as `hole T`.
-2. `./holvc.mjs check f.holv`. Fix every error. Errors are JSON on stderr; when a `fix` field is present, apply exactly that.
+2. `./holvc.mjs check f.holv`. Fix every error. Errors are JSON on stderr; when a `fix` field is present, apply exactly that. `./holvc.mjs fix f.holv` applies every mechanical one (`replace`/`with`, `add_effect`, `insert_line_1`) for you and prints what it changed.
 3. `./holvc.mjs run f.holv args`. The program runs until the first hole and stops with exit 3 and the scope as JSON. Read the scope. That is real data from the real program; use it to write the next body.
 4. Fill one hole. Go to 2.
 5. When no holes remain: `./holvc.mjs test f.holv` (examples), then `./holvc.mjs run f.holv --simulate` and read the effect log before running for real.
