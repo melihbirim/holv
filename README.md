@@ -68,6 +68,7 @@ pnpm install            # only for tsc
 ./holvc.mjs contract examples/rank.holv       # the program's contract, derived from its signatures
 ./holvc.mjs run examples/npm/slug.holv "Hello World" --caps slugify   # an npm package behind a reviewed cap from caps/
 ./holvc.mjs fmt examples/rank.holv --write
+./holvc.mjs fix examples/bad.holv              # apply the mechanical fixes from check output, then fmt
 ./test.sh                                     # every tests/*.holv conformance file plus integration checks
 ```
 
