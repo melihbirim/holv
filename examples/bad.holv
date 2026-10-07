@@ -1,0 +1,25 @@
+holv 0
+
+cap Clock { now(): Int }
+
+type Post { id: Int, up: Int }
+
+fn age(created: Int, clock: Clock) -> Int { clock.now() - created }
+
+fn count() -> Int {
+  let total = 0
+  total = total + 1
+  total
+}
+
+fn half(n: Int) -> Int { n / 2 }
+
+fn mk() -> Post { Post { id: 1 } }
+
+fn mix(a: Int, b: Float) -> Float { a + b }
+
+fn helper(c: Int) -> Int
+  effects Clock
+{ c }
+
+fn pure(c: Int) -> Int { helper(c) }

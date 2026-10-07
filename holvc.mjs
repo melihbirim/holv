@@ -426,7 +426,7 @@ function checkEffects(items) {
       if (!n || typeof n !== "object") return;
       if (n.k === "call" && n.callee.k === "ident" && fnEff.has(n.callee.name))
         for (const e of fnEff.get(n.callee.name)) if (!declared.includes(e))
-          errors.push(new HolvError("E022", n.callee.line, n.callee.col, `fn ${f.name} calls ${n.callee.name} which has effect ${e}`, { do: `add 'effects ${e}' to fn ${f.name}, and pass a ${e} capability down to it from its callers`, fn: f.name, add_effect: e }));
+          errors.push(new HolvError("E022", n.callee.line, n.callee.col, `fn ${f.name} calls ${n.callee.name} which has effect ${e}`, `add 'effects ${e}' to fn ${f.name}, and pass a ${e} capability down to it from its callers`));
       for (const v of Object.values(n)) Array.isArray(v) ? v.forEach(walk) : walk(v);
     };
     walk(f.body);
@@ -706,15 +706,71 @@ try {
 }
 
 
+// ---------------------------------------------------------------- fix
+// The closed vocabulary of machine edits beside fix.do: {replace,with}, {fn,add_effect}, {insert_line_1}. Anything else is advice for the agent.
+function fixEdits(src, items, errors) {
+  const lines = src.split("\n"); const starts = []; let o = 0;
+  for (const l of lines) { starts.push(o); o += l.length + 1; }
+  const edits = [];
+  for (const e of errors) {
+    const f = e.fix ?? {};
+    if (f.insert_line_1 !== undefined) edits.push({ start: 0, end: 0, text: f.insert_line_1 + "\n", what: f });
+    else if (f.replace !== undefined) {
+      for (let ln = e.line; ln >= 1; ln--) { // on the error's line, else the nearest line above (E054: the assignment is below its `let`)
+        const from = ln === e.line ? e.col - 1 : 0;
+        let i = lines[ln - 1].indexOf(f.replace, from);
+        if (i < 0 && ln === e.line) i = lines[ln - 1].indexOf(f.replace);
+        if (i >= 0) { edits.push({ start: starts[ln - 1] + i, end: starts[ln - 1] + i + f.replace.length, text: f.with, what: f }); break; }
+      }
+    } else if (f.add_effect !== undefined) {
+      const fn = items.find((i) => i.k === "fn" && i.name === f.fn);
+      if (!fn) continue;
+      const off = (t) => starts[t.line - 1] + t.col - 1;
+      if (fn.effects.some((x) => x.name === f.add_effect)) continue;
+      if (fn.effects.length) { const last = fn.effects[fn.effects.length - 1]; const at = off(last) + last.name.length; edits.push({ start: at, end: at, text: `, ${f.add_effect}`, what: f }); }
+      else { const at = Math.min(off(fn.examples[0] ?? fn.body), off(fn.body)); edits.push({ start: at, end: at, text: `effects ${f.add_effect}\n`, what: f }); }
+    }
+  }
+  edits.sort((a, b) => b.start - a.start || b.end - a.end);
+  const applied = []; let limit = Infinity;
+  for (const ed of edits) { // skip duplicates and overlaps; the next pass picks them up
+    if (ed.end > limit || applied.some((a) => a.start === ed.start && a.text === ed.text)) continue;
+    applied.push(ed); limit = ed.start;
+  }
+  let out = src;
+  for (const ed of applied) out = out.slice(0, ed.start) + ed.text + out.slice(ed.end);
+  return { out, applied: applied.reverse().map((a) => ({ ...a.what, line: src.slice(0, a.start).split("\n").length })) };
+}
+function fixFile(file) {
+  const changed = [];
+  for (let pass = 0; pass < 20; pass++) {
+    let c, errors;
+    try { c = compile(file); errors = c.errors; } catch (e) { if (!(e instanceof HolvError)) throw e; c = { items: [], src: fs.readFileSync(file, "utf8") }; errors = [e]; }
+    const { out, applied } = fixEdits(c.src, c.items, errors);
+    if (!applied.length) break;
+    fs.writeFileSync(file, out);
+    for (const a of applied) { console.log(JSON.stringify({ file, fixed: a })); changed.push(a); }
+  }
+  try { const { items, comments, src } = compile(file); const text = format(items, comments); if (text !== src) fs.writeFileSync(file, text); } catch (e) { if (!(e instanceof HolvError)) throw e; }
+  return changed;
+}
+
+
 const [, , cmd, file, ...rawRest] = process.argv;
 const flag = (name) => { const i = rawRest.indexOf(name); return i >= 0 ? rawRest[i + 1] : undefined; };
 const capsOpt = flag("--caps"), targetOpt = flag("--target");
 const rest = rawRest.filter((a, i) => !(["--caps", "--target"].includes(a) || ["--caps", "--target"].includes(rawRest[i - 1])));
-const usage = "usage: holvc check|build|run|test|contract <file.holv> [args] [--caps file.ts] [--target ts] [--simulate] | holvc fmt <file.holv> [--write|--check] | holvc spec";
+const usage = "usage: holvc check|build|run|test|contract <file.holv> [args] [--caps file.ts] [--target ts] [--simulate] | holvc fmt <file.holv> [--write|--check] | holvc fix <file.holv> | holvc spec";
 try {
   if (cmd === "spec") process.stdout.write(fs.readFileSync(path.join(HERE, "spec.md"), "utf8"));
   else if (!file) { console.error(usage); process.exit(2); }
   else if (cmd === "check") { const { items, errors } = compile(file); if (!report(file, errors)) process.exit(1); console.log(JSON.stringify({ ok: true, file, fns: items.filter((i) => i.k === "fn").length })); }
+  else if (cmd === "fix") {
+    fixFile(file);
+    let c; try { c = compile(file); } catch (e) { if (!(e instanceof HolvError)) throw e; c = { errors: [e] }; }
+    if (!report(file, c.errors)) process.exit(1);
+    console.log(JSON.stringify({ ok: true, file }));
+  }
   else if (cmd === "contract") { const { items, errors } = compile(file); if (!report(file, errors)) process.exit(1); console.log(JSON.stringify(contract(items, path.basename(file).replace(/\.holv$/, "")), null, 2)); }
   else if (cmd === "build") { const b = build(file, { target: targetOpt }); console.log(JSON.stringify({ ok: true, out: b.outDir, target: b.be.name })); }
   else if (cmd === "run") { const b = build(file, { caps: capsOpt, target: targetOpt }); if (!b.hasMain) { console.error(JSON.stringify({ file, code: "E061", msg: "no fn main", fix: { do: "add fn main(...) -> Int; its parameters may be caps and Int, Float, String or Bool" } })); process.exit(1); } b.be.run(b.outDir, b.name, rest, b.capsFile ? { HOLV_CAPS: b.capsFile } : {}); }

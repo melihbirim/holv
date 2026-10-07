@@ -26,6 +26,8 @@ done
 printf 'holv 0\nfn f(  ) -> Int {   1 }\n' > /tmp/holv_ugly.holv
 $H fmt /tmp/holv_ugly.holv --check 2>&1 | grep -q '"code":"F001"' && ok "fmt --check rejects a non-canonical file with F001" || bad "fmt --check should fail with F001"
 
+node tests/fix.mjs | grep -q "^ok" && ok "holvc fix: applies machine fixes, leaves only E022 E031 E056 on examples/bad.holv" || { bad "holvc fix; run: node tests/fix.mjs"; node tests/fix.mjs; }
+
 $H contract examples/rank.holv > /tmp/holv_c1.json && $H contract examples/rank.holv > /tmp/holv_c2.json && cmp -s /tmp/holv_c1.json /tmp/holv_c2.json \
   && node -e 'const c=JSON.parse(require("fs").readFileSync("/tmp/holv_c1.json","utf8")); if(c.main.args[0].name!=="n"||c.main.caps.length!==3||c.hash.length!==64||!c.fns.score.examples[0].includes("1.25")) process.exit(1)' \
   && ok "contract: generated from signatures, stable hash" || bad "contract"
