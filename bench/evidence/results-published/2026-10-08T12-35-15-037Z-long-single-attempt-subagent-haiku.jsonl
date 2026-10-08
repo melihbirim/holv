@@ -1,0 +1,6 @@
+{"task":"ledger","lang":"ts","attempts":1,"passed":true,"stages":["pass"],"feedback":[],"agent_ms":37837,"first_try":true,"compile_failures":0,"silent_wrong":false}
+{"task":"ledger","lang":"holv","attempts":1,"passed":true,"stages":["pass"],"feedback":[],"agent_ms":57427,"first_try":true,"compile_failures":0,"silent_wrong":false}
+{"task":"expr","lang":"ts","attempts":1,"passed":true,"stages":["pass"],"feedback":[],"agent_ms":33832,"first_try":true,"compile_failures":0,"silent_wrong":false}
+{"task":"expr","lang":"holv","attempts":1,"passed":true,"stages":["pass"],"feedback":[],"agent_ms":87732,"first_try":true,"compile_failures":0,"silent_wrong":false}
+{"task":"inventory","lang":"ts","attempts":1,"passed":true,"stages":["pass"],"feedback":[],"agent_ms":37854,"first_try":true,"compile_failures":0,"silent_wrong":false}
+{"task":"inventory","lang":"holv","attempts":1,"passed":true,"stages":["pass"],"feedback":[],"agent_ms":74879,"first_try":true,"compile_failures":0,"silent_wrong":false}

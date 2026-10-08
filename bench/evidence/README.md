@@ -32,6 +32,19 @@ The number that matters is silent-wrong: a program that looks right and is not. 
 
 Known biases, stated: the tasks are small and integer-only because holv 0 has no strings beyond `+` and no `Map`; that favours neither language but limits generality. The holv prompt is longer (the spec), which costs the model context. Six tasks is a pilot, not a study; add tasks before trusting a margin smaller than two.
 
+## Longer programs, single attempt (2026-10-08, evening)
+
+After `Big`, strings and `Map` landed, three tasks of the kind the earlier pilots could not express: a bank ledger from a text log, an arithmetic expression evaluator with precedence, parentheses, unary minus and malformed input, and an inventory with report lines whose values pass 2^53. One attempt, no feedback: the number for code that ships. Haiku 4.5 as subagents (`results-published/*-long-single-attempt-subagent-haiku.jsonl`).
+
+| | TS | holv |
+|---|---|---|
+| correct, first and only attempt | 3/3 | 3/3 |
+| first attempt: silent wrong | 0 | 0 |
+| first attempt: loud failure | 0 | 0 |
+| solution lines | 43 / 83 / 54 | 103 / 164 / 175 |
+
+Both languages correct on every hidden case with one shot. The holv programs are two to three times longer (no closures, no early return, explicit cursors) and were written in a language the model had read for the first time in the same prompt. The inventory in holv declared `type Item { qty: Big, price: Big }` and wrote its own `toBig` unprompted; the TypeScript one used `BigInt` from the first line. Neither made the mistake the task was built to catch. holv's cost at this size: zero extra attempts, roughly 2.5x the lines.
+
 ## Six languages on the six trap tasks (2026-10-08)
 
 Same six tasks (the four traps and the two untelegraphed overflow tasks), Haiku 4.5 as subagents, max five attempts, one hidden case on `mulmod_plain` with inputs past int64 so that 64-bit languages could be silently wrong (`results-published/*-four-langs-subagent-haiku.jsonl` plus the earlier TS and holv rows):
