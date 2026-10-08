@@ -17,6 +17,8 @@ $H run examples/rank.holv 3 --simulate 2>/dev/null | grep -q '"effect":"Out.prin
 [ -d caps/slugify/node_modules ] || pnpm install --silent --frozen-lockfile --dir caps/slugify || { bad "pnpm install caps/slugify"; exit 1; }
 [ "$($H run examples/npm/slug.holv "Hello World, from holv!" --caps slugify 2>/dev/null)" = "/posts/hello-world-from-holv" ] && ok "npm package behind a reviewed cap via --caps slugify" || bad "npm cap"
 
+$H caps verify >/dev/null 2>&1 && ok "caps verify: manifests match package.json, lockfile and caps.ts" || { bad "caps verify; run: ./holvc.mjs caps verify"; $H caps verify; }
+
 # every file that is expected to compile is committed in canonical form
 fmtfail=0
 for f in examples/*.holv examples/npm/*.holv tests/ok_*.holv tests/run_*.holv tests/hole_*.holv tests/examples_*.holv tests/fail_*.holv; do
