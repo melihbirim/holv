@@ -1,0 +1,9 @@
+holv 0
+
+-- expect: error E052
+fn f() -> Int {
+  let xs: List<Int> = List.new()
+  xs.push(1)
+  xs[0] = "one"
+  0
+}

@@ -154,7 +154,8 @@ class Parser {
         const name = this.ident(); this.p++; stmts.push({ k: "assign", name, expr: this.expr(), ...this.pos(k) });
       } else {
         const e = this.expr();
-        if (this.at("}")) tail = e; else stmts.push({ k: "expr", expr: e, ...this.pos(k) });
+        if (e.k === "index" && this.at("=")) { this.p++; stmts.push({ k: "setIndex", target: e, expr: this.expr(), ...this.pos(k) }); }
+        else if (this.at("}")) tail = e; else stmts.push({ k: "expr", expr: e, ...this.pos(k) });
       }
     }
     const close = this.expect("}");
@@ -219,7 +220,7 @@ class Parser {
 
 // ---------------------------------------------------------------- types
 const prim = (n) => ({ k: "prim", n });
-const T = { Int: prim("Int"), Float: prim("Float"), String: prim("String"), Bool: prim("Bool"), Unit: prim("Unit") };
+const T = { Int: prim("Int"), Float: prim("Float"), Big: prim("Big"), String: prim("String"), Bool: prim("Bool"), Unit: prim("Unit") };
 const ERR = { k: "err" }, ANY = { k: "any" };
 const listT = (el) => ({ k: "list", el });
 function same(a, b) {
@@ -235,11 +236,14 @@ function show(t) {
   if (t.k === "err" || t.k === "any") return "?";
   return t.n;
 }
-const isNum = (t) => t.k === "prim" && (t.n === "Int" || t.n === "Float");
+const isNum = (t) => t.k === "prim" && (t.n === "Int" || t.n === "Float" || t.n === "Big");
+const isIntegral = (t) => t.k === "prim" && (t.n === "Int" || t.n === "Big");
 const BUILTINS = {
   sqrt: { params: [T.Float], ret: T.Float, js: "Math.sqrt" },
   floor: { params: [T.Float], ret: T.Int, js: "Math.floor" },
   toFloat: { params: [T.Int], ret: T.Float, js: "" },
+  big: { params: [T.Int], ret: T.Big, js: "BigInt" },
+  toInt: { params: [T.Big], ret: T.Int, js: "toInt" },
   str: { params: [ANY], ret: T.String, js: "String" },
 };
 
@@ -255,7 +259,7 @@ class Checker {
   }
   err(code, at, msg, fix, extra) { this.errors.push(new HolvError(code, at.line, at.col, msg, fix, extra)); return ERR; }
   resolveName(t) { return t.name === "List" ? `List<${this.resolveName(t.args[0])}>` : t.name; }
-  known() { return ["Int", "Float", "String", "Bool", "Unit", "List<T>", ...this.structs.keys(), ...this.caps.keys()]; }
+  known() { return ["Int", "Float", "Big", "String", "Bool", "Unit", "List<T>", ...this.structs.keys(), ...this.caps.keys()]; }
   resolve(t) {
     if (T[t.name]) return T[t.name];
     if (t.name === "List") {
@@ -304,6 +308,10 @@ class Checker {
         if (!v.mut) this.err("E054", s, `${s.name} is immutable; declare it with 'var'`, { do: `change 'let ${s.name}' to 'var ${s.name}' where it is declared`, replace: `let ${s.name}`, with: `var ${s.name}` });
         const t = this.expr(s.expr, env);
         if (!same(t, v.t)) this.err("E052", s, `${s.name}: is ${show(v.t)}, assigned ${show(t)}`, `assign a ${show(v.t)} to ${s.name}; a variable never changes type`, { expected: show(v.t), got: show(t) });
+      } else if (s.k === "setIndex") {
+        const el = this.expr(s.target, env); // types the list and the index, reports E033/E031 itself
+        const t = this.expr(s.expr, env);
+        if (el.k !== "err" && !same(t, el)) this.err("E052", s, `${show(el)} element assigned a ${show(t)}`, `assign a ${show(el)}; a List<T> only holds T`, { expected: show(el), got: show(t) });
       } else if (s.k === "while") {
         const c = this.expr(s.cond, env); if (!same(c, T.Bool)) this.err("E031", s.cond, `while condition must be Bool, got ${show(c)}`, "write a comparison, e.g. while i < n { ... }", { expected: "Bool", got: show(c) });
         this.block(s.body, env, false);
@@ -334,12 +342,12 @@ class Checker {
         if (l.k === "err" || r.k === "err") return ERR;
         const op = e.op;
         if (op === "and" || op === "or") return same(l, T.Bool) && same(r, T.Bool) ? T.Bool : this.err("E031", e, `${op} needs Bool and Bool, got ${show(l)} and ${show(r)}`, `make both sides of ${op} comparisons or Bool values`, { expected: "Bool and Bool", got: `${show(l)} and ${show(r)}` });
-        if (!same(l, r)) return this.err("E031", e, `${op}: ${show(l)} and ${show(r)} differ`, isNum(l) && isNum(r) ? `wrap the Int side in toFloat(), or use floor() on the Float side if the result should be Int` : `make both sides of ${op} the same type`, { left: show(l), right: show(r) });
+        if (!same(l, r)) return this.err("E031", e, `${op}: ${show(l)} and ${show(r)} differ`, isNum(l) && isNum(r) ? `convert one side: toFloat(Int), big(Int) for Big, toInt(Big); Int, Float and Big never mix` : `make both sides of ${op} the same type`, { left: show(l), right: show(r) });
         if (op === "==" || op === "!=") return l.k === "prim" ? T.Bool : this.err("E031", e, `${op} only compares Int, Float, String, Bool`, `compare a field of the ${show(l)} instead, e.g. a.id ${op} b.id`, { got: show(l) });
         if (["<", ">", "<=", ">="].includes(op)) return isNum(l) || same(l, T.String) ? T.Bool : this.err("E031", e, `${op} needs Int, Float or String, got ${show(l)}`, `compare a field of the ${show(l)} instead`, { expected: "Int, Float or String", got: show(l) });
         if (op === "+" && same(l, T.String)) return T.String;
-        if (op === "div" || op === "mod") return same(l, T.Int) ? T.Int : this.err("E031", e, `${op} needs Int, got ${show(l)}`, `use / for Float division, or floor() both sides to get Int`, { expected: "Int", got: show(l) });
-        if (op === "/") return same(l, T.Float) ? T.Float : this.err("E032", e, `/ needs Float; for Int use div`, { do: "replace / with div for integer division, or wrap both sides in toFloat() for Float division", replace: "/", with: "div" }, { got: show(l) });
+        if (op === "div" || op === "mod") return isIntegral(l) ? l : this.err("E031", e, `${op} needs Int or Big, got ${show(l)}`, `use / for Float division, or floor() both sides to get Int`, { expected: "Int or Big", got: show(l) });
+        if (op === "/") return same(l, T.Float) ? T.Float : this.err("E032", e, `/ needs Float; for Int or Big use div`, { do: "replace / with div for integer division, or wrap both sides in toFloat() for Float division", replace: "/", with: "div" }, { got: show(l) });
         return isNum(l) ? l : this.err("E031", e, `${op} needs Int or Float, got ${show(l)}`, op === "+" ? "+ joins two Strings or adds two numbers; convert with str() to join" : `apply ${op} to numbers`, { expected: "Int or Float", got: show(l) });
       }
       case "field": {
@@ -442,15 +450,16 @@ function checkEffects(items) {
 }
 
 // ---------------------------------------------------------------- emit TypeScript
-const TS = { Int: "number", Float: "number", String: "string", Bool: "boolean", Unit: "void" };
+const TS = { Int: "number", Float: "number", Big: "bigint", String: "string", Bool: "boolean", Unit: "void" };
 const tsType = (t) => (t.name === "List" ? `${tsType(t.args[0])}[]` : TS[t.name] ?? t.name);
 const ind = (n) => "  ".repeat(n);
 const JSBIN = { and: "&&", or: "||", "==": "===", "!=": "!==" };
 // Int is a 53-bit safe integer; + - * neg and floor() go through ck(), which stops the program on overflow (#5).
 const isInt = (e) => e.t?.k === "prim" && e.t.n === "Int";
+const isBig = (e) => e.t?.k === "prim" && e.t.n === "Big";
 
 function emit(items, srcName) {
-  let out = `// generated by holvc from ${srcName}; do not edit\nimport { hole, at, ck, ckOp, capCall } from "./runtime.ts";\n\n`;
+  let out = `// generated by holvc from ${srcName}; do not edit\nimport { hole, at, setAt, ck, ckOp, toInt, capCall } from "./runtime.ts";\n\n`;
   const examples = [];
   for (const it of items) {
     if (it.k === "type") out += `export type ${it.name} = { ${it.fields.map((f) => `${f.name}: ${tsType(f.type)}`).join("; ")} };\n\n`;
@@ -472,6 +481,7 @@ function emitBlock(b, scope, fn, d, valued) {
     else if (st.k === "assign") s += `${ind(d + 1)}${st.name} = ${emitExpr(st.expr, scope, fn)};\n`;
     else if (st.k === "for") s += `${ind(d + 1)}for (let ${st.v} = ${emitExpr(st.from, scope, fn)}; ${st.v} < ${emitExpr(st.to, scope, fn)}; ${st.v}++) ${emitBlock(st.body, [...scope, st.v], fn, d + 1, false)}\n`;
     else if (st.k === "while") s += `${ind(d + 1)}while (${emitExpr(st.cond, scope, fn)}) ${emitBlock(st.body, scope, fn, d + 1, false)}\n`;
+    else if (st.k === "setIndex") s += `${ind(d + 1)}setAt(${emitExpr(st.target.obj, scope, fn)}, ${emitExpr(st.target.idx, scope, fn)}, ${emitExpr(st.expr, scope, fn)}, ${JSON.stringify(`${fn}:${st.target.line}:${st.target.col}`)});\n`;
     else if (st.expr.k === "if" && st.expr.t?.n === "Unit") s += `${ind(d + 1)}${emitIfStmt(st.expr, scope, fn, d + 1)}\n`;
     else s += `${ind(d + 1)}${emitExpr(st.expr, scope, fn)};\n`;
   }
@@ -499,7 +509,7 @@ function emitExpr(e, scope, fn) {
     case "neg": return isInt(e) ? `ck(-${x(e.e)}, ${pos(e)})` : `(-${x(e.e)})`;
     case "not": return `(!${x(e.e)})`;
     case "bin":
-      if (e.op === "div") return `Math.trunc(${x(e.l)} / ${x(e.r)})`;
+      if (e.op === "div") return isBig(e) ? `(${x(e.l)} / ${x(e.r)})` : `Math.trunc(${x(e.l)} / ${x(e.r)})`;
       if (e.op === "mod") return `(${x(e.l)} % ${x(e.r)})`;
       if (isInt(e) && ["+", "-", "*"].includes(e.op)) return `ckOp(${x(e.l)}, ${JSON.stringify(e.op)}, ${x(e.r)}, ${pos(e)})`;
       if (["==", "!=", "<", ">", "<=", ">="].includes(e.op)) {
@@ -511,7 +521,7 @@ function emitExpr(e, scope, fn) {
     case "field": return e.name === "len" ? `${x(e.obj)}.length` : `${x(e.obj)}.${e.name}`;
     case "index": return `at(${x(e.obj)}, ${x(e.idx)}, ${pos(e)})`;
     case "call":
-      if (e.callee.k === "ident" && BUILTINS[e.callee.name]) { const c = `${BUILTINS[e.callee.name].js}(${e.args.map(x).join(", ")})`; return e.callee.name === "floor" ? `ck(${c}, ${pos(e)})` : c; }
+      if (e.callee.k === "ident" && BUILTINS[e.callee.name]) { const c = `${BUILTINS[e.callee.name].js}(${e.args.map(x).join(", ")})`; return e.callee.name === "floor" ? `ck(${c}, ${pos(e)})` : e.callee.name === "toInt" ? `toInt(${e.args.map(x).join(", ")}, ${pos(e)})` : c; }
       return `${x(e.callee)}(${e.args.map(x).join(", ")})`;
     case "method":
       if (e.obj.k === "ident" && e.obj.name === "List" && e.name === "new") return "[]";
@@ -544,6 +554,7 @@ function format(items, comments) {
     if (st.k === "assign") return `${st.name} = ${fx(st.expr, d)}`;
     if (st.k === "for") return `for ${st.v} in ${fx(st.from, d)} .. ${fx(st.to, d)} ${block(st.body, d)}`;
     if (st.k === "while") return `while ${fx(st.cond, d)} ${block(st.body, d)}`;
+    if (st.k === "setIndex") return `${fx(st.target, d)} = ${fx(st.expr, d)}`;
     return fx(st.expr, d);
   };
   const block = (b, d) => {
@@ -701,7 +712,7 @@ function tsDriver(items, name, srcName, contractObj) {
     });
     const call = main ? `prog.main(${args.join(", ")})` : `(() => { console.error(JSON.stringify({ file: ${JSON.stringify(srcName)}, code: "E061", msg: "no fn main", fix: { do: "add fn main(...) -> Int; its parameters may be caps and Int, Float, String or Bool" } })); return 1; })()`;
     return `// generated by holvc; do not edit
-import { Caps, HoleReached, RuntimeError, runExamples, where, fromStack, proc } from "./runtime.ts";
+import { Caps, HoleReached, RuntimeError, runExamples, where, fromStack, json, proc } from "./runtime.ts";
 import * as prog from "./${name}.ts";
 const argv = proc.argv.slice(2);
 if (argv.includes("--contract")) { console.log(${JSON.stringify(JSON.stringify(contractObj))}); proc.exit(0); }
@@ -715,11 +726,11 @@ try {
   if (simulate) caps.plan();
   proc.exit(code);
 } catch (e) {
-  if (e instanceof HoleReached) { const at = where(e.at); console.error(JSON.stringify({ hole: \`\${at.fn}:\${at.line}\`, at, type: e.type, scope: e.scope, fix: { do: \`replace \'hole \${e.type}\' at line \${at.line} of fn \${at.fn} with an expression of type \${e.type}; the scope above is the real data at that point\` } })); proc.exit(3); }
+  if (e instanceof HoleReached) { const at = where(e.at); console.error(json({ hole: \`\${at.fn}:\${at.line}\`, at, type: e.type, scope: e.scope, fix: { do: \`replace \'hole \${e.type}\' at line \${at.line} of fn \${at.fn} with an expression of type \${e.type}; the scope above is the real data at that point\` } })); proc.exit(3); }
   const err = e instanceof Error ? e : new Error(String(e));
   const at = e instanceof RuntimeError && e.at ? where(e.at) : fromStack(err);
   const fix = e instanceof RuntimeError ? e.fix : { do: \`this is a runtime error in program code at fn \${at.fn}; reproduce with the same args and HOLV_SEED/HOLV_NOW, then fix that body\` };
-  console.error(JSON.stringify({ error: err.name, at, msg: err.message, fix, ...(proc.env.HOLV_DEBUG ? { stack: err.stack } : {}) }));
+  console.error(json({ error: err.name, at, msg: err.message, fix, ...(proc.env.HOLV_DEBUG ? { stack: err.stack } : {}) }));
   proc.exit(4);
 }
 `;

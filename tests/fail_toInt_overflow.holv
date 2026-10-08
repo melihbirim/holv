@@ -1,0 +1,7 @@
+holv 0
+
+-- expect: run-fail "error":"IntOverflow"
+fn main() -> Int {
+  let p = big(999999937) * big(999999929)
+  toInt(p)
+}

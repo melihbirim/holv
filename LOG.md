@@ -24,6 +24,8 @@ Repeated the six original tasks once more, holv only, through subagents: 6/6 fir
 
 Then Melih asked for the same comparison against Go, Rust, Zig and C. Added the four to the harness, one past-int64 hidden case so 64-bit languages could be silently wrong, 24 cells. 24/24 first try. Haiku used `math/big`, `i128`, `u128`, and a double-and-add in C, unprompted. holv was the only language of six that needed a second attempt. The claim is not just unsupported against TypeScript; it is unsupported against everything, at this task size, with this model.
 
+**Two measured gaps fixed, under the freeze, as measurement enablers.** `Big`: an exact integer (`big`, `toInt`, arithmetic between Bigs, compiles to `bigint`), because every holv miss in five pilots was arithmetic past 2^53 and every other language had a one-word answer. `xs[i] = v` (#39), because a sieve could not be written. Seven tests. Neither makes holv win; they bring its cost to parity so the next pilot can be about something other than integers.
+
 What I would not take back: every check caught something real in code I wrote; the error contract and the generated contract are worth having in any language; the harness and the numbers exist and are honest. What I was wrong about: I expected a capable model to make the mistakes the checks catch. It did not, on tasks this size.
 
 ## 2026-10-06, day one

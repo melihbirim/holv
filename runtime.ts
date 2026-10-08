@@ -42,6 +42,19 @@ export function ckOp(l: number, op: string, r: number, at: string): number {
     throw new RuntimeError("IntOverflow", `${l} ${op} ${r} = ${n} is outside the safe Int range ±9007199254740991`, OVERFLOW_FIX, at);
   return n;
 }
+// JSON for anything the runtime prints: Big values (bigint) print as digits with an n suffix.
+export const json = (v: unknown) => JSON.stringify(v, (_, x) => (typeof x === "bigint" ? `${x}n` : x));
+// Big -> Int: exact or it stops the program.
+export function toInt(b: bigint, at: string): number {
+  if (b > 9007199254740991n || b < -9007199254740991n)
+    throw new RuntimeError("IntOverflow", `toInt(${b}) is outside the safe Int range ±9007199254740991`, "keep the value as Big, or reduce it (mod) before converting", at);
+  return Number(b);
+}
+export function setAt<T>(xs: T[], i: number, v: T, at: string): void {
+  if (!Number.isInteger(i) || i < 0 || i >= xs.length)
+    throw new RuntimeError("IndexOutOfRange", `index ${i} out of range for a List of length ${xs.length}`, `guard the index with 'if i < xs.len { ... }' or push to grow the list; assignment never extends it`, at);
+  xs[i] = v;
+}
 export function at<T>(xs: T[], i: number, at: string): T {
   if (!Number.isInteger(i) || i < 0 || i >= xs.length)
     throw new RuntimeError("IndexOutOfRange", `index ${i} out of range for a List of length ${xs.length}`, `guard the index with 'if i < xs.len { ... }' or fix the arithmetic that produced ${i}`, at);
@@ -65,7 +78,7 @@ export function runExamples(exs: Array<[string, () => unknown, unknown]>): boole
     let got: unknown, pass: boolean;
     try { got = run(); pass = Object.is(got, expected); } catch (e) { got = String(e); pass = false; }
     ok &&= pass;
-    console.log(JSON.stringify({ example: name, pass, expected, got }));
+    console.log(json({ example: name, pass, expected, got }));
   }
   return ok;
 }
@@ -112,5 +125,5 @@ export class Caps {
       },
     });
   }
-  plan() { for (const e of this.log) console.log(JSON.stringify(e)); }
+  plan() { for (const e of this.log) console.log(json(e)); }
 }

@@ -2,23 +2,9 @@ holv 0
 
 cap Out { print(s: String): Unit }
 
-fn mulmod(a: Int, b: Int, m: Int) -> Int {
-  var result = 0
-  var x = a mod m
-  var y = b mod m
-  while y > 0 {
-    if y mod 2 == 1 {
-      result = (result + x) mod m
-    }
-    x = x * 2 mod m
-    y = y div 2
-  }
-  result
-}
-
 fn main(out: Out, a: Int, b: Int, m: Int) -> Int
   effects Out
 {
-  out.print(str(mulmod(a, b, m)))
+  out.print(str(toInt(big(a) * big(b) mod big(m))))
   0
 }

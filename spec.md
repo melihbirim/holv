@@ -25,7 +25,7 @@ fn main(clock: Clock, out: Out, n: Int) -> Int        -- effectful fn: cap param
 Rules: a cap type may appear only as a fn parameter: never a struct field, a `List` element, a cap method parameter or result, or a fn return type (E023). A fn that takes a cap must declare `effects Cap`. A fn that calls an effectful fn must declare its effects too. `main` may take caps and Int/Float/String/Bool; the driver supplies caps, argv supplies the rest.
 
 ## Types
-`Int` `Float` `String` `Bool` `Unit` `List<T>` and declared types. No null. `Int` is a 53-bit integer (±9007199254740991): an Int literal beyond that is a compile error (E058), an Int result beyond it stops the program (IntOverflow, exit 4); nothing wraps or rounds silently. No implicit conversion: `Int` and `Float` never mix, use `toFloat(i)`. `/` is Float only; Int uses `div` and `mod`.
+`Int` `Float` `Big` `String` `Bool` `Unit` `List<T>` and declared types. No null. `Big` is an exact integer of any size: `big(i)` from Int, `toInt(b)` back (stops the program if it does not fit), `+ - * div mod` and comparisons between two Big; it never mixes with Int or Float. `Int` is a 53-bit integer (±9007199254740991): an Int literal beyond that is a compile error (E058), an Int result beyond it stops the program (IntOverflow, exit 4); nothing wraps or rounds silently. No implicit conversion: `Int` and `Float` never mix, use `toFloat(i)`. `/` is Float only; Int uses `div` and `mod`.
 
 ## Statements
 ```
@@ -40,8 +40,8 @@ while i < n { ... }        -- condition is Bool
 Literals `1` `1.5` `"s"` `true`. Operators by precedence: `or` `and` `== !=` `< <= > >=` `+ -` `* / div mod`. Unary `-x` `not b`.
 `if c { a } else { b }` is an expression; both branches same type. `if c { ... }` without `else` is a statement: its block must be `Unit`. `while c { ... }` loops while `c` is true. fns may call themselves.
 `Post { id: 1, up: 2, created: 0 }` struct literal, all fields required.
-`xs[i]` (out of range stops the program) `xs.len` `xs.push(v)` `xs.sortBy(fn(a, b) { ... })` comparator returns Int.
-Builtins: `sqrt(Float) -> Float` `floor(Float) -> Int` `toFloat(Int) -> Float` `str(x) -> String`.
+`xs[i]` (out of range stops the program) `xs[i] = v` (same bounds; assignment never grows a list) `xs.len` `xs.push(v)` `xs.sortBy(fn(a, b) { ... })` comparator returns Int.
+Builtins: `sqrt(Float) -> Float` `floor(Float) -> Int` `toFloat(Int) -> Float` `big(Int) -> Big` `toInt(Big) -> Int` `str(x) -> String`.
 `hole T` compiles and runs; reaching it stops the program with the scope as JSON (exit 3). Runtime errors (index out of range, Int overflow, a cap that throws) are JSON with `at: {fn, line, col}` pointing into the `.holv`, `fix.do`, exit 4.
 A `fn(a, b) { ... }` literal is only allowed as the argument of `sortBy`.
 

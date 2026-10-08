@@ -1,0 +1,30 @@
+holv 0
+
+-- expect: run => 168
+-- args: 1000
+cap Out { print(s: String): Unit }
+
+fn primesBelow(n: Int) -> Int
+  example primesBelow(10) == 4
+  example primesBelow(2) == 0
+{
+  let sieve: List<Bool> = List.new()
+  for i in 0 .. n { sieve.push(true) }
+  var count = 0
+  for i in 2 .. n { if sieve[i] {
+    count = count + 1
+    var j = i * i
+    while j < n {
+      sieve[j] = false
+      j = j + i
+    }
+  } }
+  count
+}
+
+fn main(out: Out, n: Int) -> Int
+  effects Out
+{
+  out.print(str(primesBelow(n)))
+  0
+}

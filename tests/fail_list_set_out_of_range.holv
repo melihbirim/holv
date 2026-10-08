@@ -1,0 +1,9 @@
+holv 0
+
+-- expect: run-fail "error":"IndexOutOfRange","at":{"fn":"main","line":7,"col":5}
+fn main() -> Int {
+  let xs: List<Int> = List.new()
+  xs.push(1)
+  xs[3] = 9
+  0
+}

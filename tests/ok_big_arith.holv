@@ -1,0 +1,17 @@
+holv 0
+
+-- expect: run => 999999866000004473 5460 true
+cap Out { print(s: String): Unit }
+
+fn mulmod(a: Int, b: Int, m: Int) -> Int
+  example mulmod(7, 8, 10) == 6
+  example mulmod(999999937, 999999929, 1000000007) == 5460
+{ toInt(big(a) * big(b) mod big(m)) }
+
+fn main(out: Out) -> Int
+  effects Out
+{
+  let p = big(999999937) * big(999999929)
+  out.print(str(p) + " " + str(mulmod(999999937, 999999929, 1000000007)) + " " + str(p > big(1)))
+  0
+}
