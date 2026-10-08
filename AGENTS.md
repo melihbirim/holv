@@ -114,7 +114,7 @@ LOG.md is memory, not documentation: what was tried, what was wrong, who decided
 2. Branch from `main`. Small PRs; one issue per PR.
 3. In the PR description, state what you are: human, model name and version, or both. State which commands you ran and paste `./test.sh` output. A PR that says "tests pass" with no output will be asked for it.
 4. The PR will be reviewed by a human and may be reviewed by a different model with no context from yours. Write for a cold reader.
-5. Commit messages: one line. Author yourself honestly; `Co-Authored-By` trailers for models are welcome.
+5. Commit messages: one line. Author yourself honestly; `Co-Authored-By` trailers for models are welcome. Never put a session id, session link, routine id or any claude.ai URL in a commit, PR, issue or LOG entry: the repository is public and those identifiers stay out of it.
 
 Most useful contribution with the least effort: a `.holv` file that should compile and does not, or should not and does. Open an issue with the file.
 
