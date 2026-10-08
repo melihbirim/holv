@@ -29,9 +29,17 @@ export function fromStack(e: Error): Where {
   return { fn: m?.[1] ?? "?", line: 0, col: 0 };
 }
 // Int is a 53-bit safe integer. Every Int + - * neg and floor() result passes through here.
+const OVERFLOW_FIX = "Int is a 53-bit integer. If the value is needed, use Float. If it is not needed (a loop that computes one step past the value it uses is the usual case), stop one step earlier.";
 export function ck(n: number, at: string): number {
   if (!Number.isSafeInteger(n))
-    throw new RuntimeError("IntOverflow", `Int result ${n} is outside the safe range ±9007199254740991`, "use Float for values this large, or restructure the arithmetic (e.g. divide before multiplying); Int is a 53-bit integer", at);
+    throw new RuntimeError("IntOverflow", `Int result ${n} is outside the safe range ±9007199254740991`, OVERFLOW_FIX, at);
+  return n;
+}
+// Binary Int arithmetic reports the operands, so an agent can see which input was already as large as it needed.
+export function ckOp(l: number, op: string, r: number, at: string): number {
+  const n = op === "+" ? l + r : op === "-" ? l - r : l * r;
+  if (!Number.isSafeInteger(n))
+    throw new RuntimeError("IntOverflow", `${l} ${op} ${r} = ${n} is outside the safe Int range ±9007199254740991`, OVERFLOW_FIX, at);
   return n;
 }
 export function at<T>(xs: T[], i: number, at: string): T {

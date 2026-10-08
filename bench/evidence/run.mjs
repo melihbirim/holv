@@ -18,8 +18,13 @@ const ROOT = path.resolve(HERE, "..", "..");
 const HOLVC = path.join(ROOT, "holvc.mjs");
 const argv = process.argv.slice(2);
 const opt = (n, d) => { const i = argv.indexOf(n); return i >= 0 ? argv[i + 1] : d; };
+// Two-phase mode, for an orchestrator that dispatches prompts itself (e.g. subagents on a plan instead of API credit):
+//   run.mjs prompt --task t --lang l      prints the prompt for the next attempt (with feedback from the last one)
+//   run.mjs verify --task t --lang l      checks the written file, records the attempt, prints {pass, stage, report}
+//   run.mjs summarize [--label x]         builds the results file and the table from the recorded attempts
+const MODE = ["prompt", "verify", "summarize"].includes(argv[0]) ? argv[0] : "loop";
 const AGENT = opt("--agent");
-if (!AGENT) { console.error("usage: run.mjs --agent \"<cmd>\" [--tasks a,b] [--langs ts,holv] [--max 5]"); process.exit(2); }
+if (MODE === "loop" && !AGENT) { console.error("usage: run.mjs --agent \"<cmd>\" [--tasks a,b] [--langs ts,holv] [--max 5] | run.mjs prompt|verify --task t --lang l | run.mjs summarize"); process.exit(2); }
 const MAX = Number(opt("--max", 5));
 const LANGS = opt("--langs", "ts,holv").split(",");
 const TASKS = opt("--tasks", fs.readdirSync(path.join(HERE, "tasks")).sort().join(",")).split(",");
@@ -61,6 +66,59 @@ function prompt(lang, task, file, feedback) {
   return `${head}# Task\n${task.text.trim()}\n\n# Visible example\ninput: ${task.visible.args.join(" ")}\noutput:\n${task.visible.stdout.trim()}\n\n# Output\n${io} Write only the file; do not explain.${fb}\n`;
 }
 
+const loadTask = (name) => { const t = JSON.parse(fs.readFileSync(path.join(HERE, "tasks", name, "task.json"), "utf8")); t.text = fs.readFileSync(path.join(HERE, "tasks", name, "task.md"), "utf8"); return t; };
+const cell = (name, lang) => { const work = path.join(HERE, "work", name, lang); fs.mkdirSync(work, { recursive: true }); return { work, file: path.join(work, lang === "holv" ? "solution.holv" : "solution.mjs"), state: path.join(work, "state.json") }; };
+const finish = (row) => { row.first_try = row.stages[0] === "pass"; row.compile_failures = row.stages.filter((s) => s === "compile").length; row.silent_wrong = !row.passed && row.stages[row.stages.length - 1] === "hidden_wrong"; return row; };
+function table(rows, out) {
+  const by = (lang) => rows.filter((r) => r.lang === lang);
+  const col = (lang, f) => by(lang).length ? f(by(lang)) : "-";
+  const sum = (xs, f) => xs.reduce((a, r) => a + f(r), 0);
+  console.log(`\n${"metric".padEnd(28)}${LANGS.map((l) => l.padStart(8)).join("")}`);
+  for (const [label, f] of [
+    ["tasks", (xs) => xs.length],
+    ["passed", (xs) => sum(xs, (r) => r.passed ? 1 : 0)],
+    ["first-try pass", (xs) => sum(xs, (r) => r.first_try ? 1 : 0)],
+    ["mean attempts", (xs) => (sum(xs, (r) => r.attempts) / xs.length).toFixed(2)],
+    ["compile failures", (xs) => sum(xs, (r) => r.compile_failures)],
+    ["silent wrong (final)", (xs) => sum(xs, (r) => r.silent_wrong ? 1 : 0)],
+    ["agent seconds", (xs) => (sum(xs, (r) => r.agent_ms) / 1000).toFixed(0)],
+  ]) console.log(`${label.padEnd(28)}${LANGS.map((l) => String(col(l, f)).padStart(8)).join("")}`);
+  console.log(`\nresults: ${path.relative(ROOT, out)}`);
+}
+if (MODE === "prompt") {
+  const name = opt("--task"), lang = opt("--lang"), task = loadTask(name), c = cell(name, lang);
+  const st = fs.existsSync(c.state) ? JSON.parse(fs.readFileSync(c.state, "utf8")) : { stages: [], feedback: [], started: Date.now() };
+  if (!fs.existsSync(c.state)) fs.writeFileSync(c.state, JSON.stringify(st));
+  fs.rmSync(c.file, { force: true }); // each attempt writes a fresh file; previous attempts are kept as .attemptN by verify
+  process.stdout.write(prompt(lang, task, c.file, st.feedback.length ? st.feedback[st.feedback.length - 1] : null));
+  process.exit(0);
+}
+if (MODE === "verify") {
+  const name = opt("--task"), lang = opt("--lang"), task = loadTask(name), c = cell(name, lang);
+  const st = JSON.parse(fs.readFileSync(c.state, "utf8"));
+  const i = st.stages.length + 1;
+  let v;
+  if (!fs.existsSync(c.file)) v = { stage: "no_file", report: `no file was written at ${c.file}` };
+  else { fs.copyFileSync(c.file, `${c.file}.attempt${i}`); v = verify(lang, c.file, task); }
+  st.stages.push(v ? v.stage : "pass"); if (v) st.feedback.push(v.report.slice(0, 2000));
+  st.passed = !v; st.attempts = i; st.agent_ms = Date.now() - st.started;
+  fs.writeFileSync(c.state, JSON.stringify(st));
+  console.log(JSON.stringify({ task: name, lang, attempt: i, pass: !v, stage: v?.stage ?? "pass", report: v?.report ?? "" }));
+  process.exit(0);
+}
+if (MODE === "summarize") {
+  fs.mkdirSync(path.join(HERE, "results"), { recursive: true });
+  const out = path.join(HERE, "results", `${new Date().toISOString().replace(/[:.]/g, "-")}${opt("--label") ? "-" + opt("--label") : ""}.jsonl`);
+  const rows = [];
+  for (const name of TASKS) for (const lang of LANGS) {
+    const c = cell(name, lang); if (!fs.existsSync(c.state)) continue;
+    const st = JSON.parse(fs.readFileSync(c.state, "utf8"));
+    rows.push(finish({ task: name, lang, attempts: st.attempts ?? st.stages.length, passed: !!st.passed, stages: st.stages, feedback: st.feedback, agent_ms: st.agent_ms ?? 0 }));
+  }
+  for (const r of rows) fs.appendFileSync(out, JSON.stringify(r) + "\n");
+  table(rows, out); process.exit(0);
+}
+
 fs.mkdirSync(path.join(HERE, "results"), { recursive: true });
 const out = path.join(HERE, "results", `${new Date().toISOString().replace(/[:.]/g, "-")}.jsonl`);
 const rows = [];
@@ -84,25 +142,10 @@ for (const name of TASKS) {
       if (!v) { row.passed = true; row.stages.push("pass"); break; }
       row.stages.push(v.stage); feedback = v.report; row.feedback.push(v.report.slice(0, 2000));
     }
-    row.first_try = row.stages[0] === "pass";
-    row.compile_failures = row.stages.filter((s) => s === "compile").length;
-    row.silent_wrong = !row.passed && row.stages[row.stages.length - 1] === "hidden_wrong";
+    finish(row);
     rows.push(row);
     fs.appendFileSync(out, JSON.stringify(row) + "\n");
     console.error(JSON.stringify(row));
   }
 }
-const by = (lang) => rows.filter((r) => r.lang === lang);
-const col = (lang, f) => by(lang).length ? f(by(lang)) : "-";
-const sum = (xs, f) => xs.reduce((a, r) => a + f(r), 0);
-console.log(`\n${"metric".padEnd(28)}${LANGS.map((l) => l.padStart(8)).join("")}`);
-for (const [label, f] of [
-  ["tasks", (xs) => xs.length],
-  ["passed", (xs) => sum(xs, (r) => r.passed ? 1 : 0)],
-  ["first-try pass", (xs) => sum(xs, (r) => r.first_try ? 1 : 0)],
-  ["mean attempts", (xs) => (sum(xs, (r) => r.attempts) / xs.length).toFixed(2)],
-  ["compile failures", (xs) => sum(xs, (r) => r.compile_failures)],
-  ["silent wrong (final)", (xs) => sum(xs, (r) => r.silent_wrong ? 1 : 0)],
-  ["agent seconds", (xs) => (sum(xs, (r) => r.agent_ms) / 1000).toFixed(0)],
-]) console.log(`${label.padEnd(28)}${LANGS.map((l) => String(col(l, f)).padStart(8)).join("")}`);
-console.log(`\nresults: ${path.relative(ROOT, out)}`);
+table(rows, out);

@@ -44,7 +44,19 @@ Known biases, stated: the tasks are small and integer-only because holv 0 has no
 | silent wrong (final) | 0 | 0 |
 | agent seconds | 86 | 370 |
 
-Reading: holv lost on cost and could not show its benefit. Every holv failure was a compile error that the message then fixed; every task ended correct in both languages. Three tasks cost Haiku two or three extra rounds in a language it had learned from the spec thirty seconds earlier, against JavaScript it knows by heart: unfamiliarity costs about 4x the time on this pilot. Silent-wrong was zero in both, so these tasks are too easy to test the claim holv exists for; the benefit side needs tasks with real traps (overflow, aliasing, an effect the program must not have). The harness did not record which compile errors occurred, which was the most useful data; it does now (`feedback` per attempt, every attempt file kept). Numbers published whichever way they go.
+**Same day, same model and tasks, driven as Claude Code subagents instead of `claude -p`** (`results-published/2026-10-08T11-03-25-145Z-subagent-haiku.jsonl`):
+
+| | TS | holv |
+|---|---|---|
+| passed | 6/6 | 6/6 |
+| first-try pass | 6 | 5 |
+| mean attempts | 1.00 | 1.33 |
+| compile failures | 0 | 0 |
+| silent wrong (final) | 0 | 0 |
+
+Seven compile errors in the morning, zero in the afternoon, same model, same prompts: the pilots are too small to trust any margin, and the wrapper around the model matters as much as the language. The one holv miss was an overflow in a value the program never printed (a loop running one step past `fib(n)`); TypeScript's identical loop passed because it rounded silently. The `IntOverflow` message then failed to help: it named the result but not the operands, and Haiku resubmitted the same program. The message now shows `l op r = n` and says to stop one step earlier when the value is unused. Agent seconds are not comparable across the two runs (the subagent run includes orchestration latency).
+
+Reading of the morning run: holv lost on cost and could not show its benefit. Every holv failure was a compile error that the message then fixed; every task ended correct in both languages. Three tasks cost Haiku two or three extra rounds in a language it had learned from the spec thirty seconds earlier, against JavaScript it knows by heart: unfamiliarity costs about 4x the time on this pilot. Silent-wrong was zero in both, so these tasks are too easy to test the claim holv exists for; the benefit side needs tasks with real traps (overflow, aliasing, an effect the program must not have). The harness did not record which compile errors occurred, which was the most useful data; it does now (`feedback` per attempt, every attempt file kept). Numbers published whichever way they go.
 
 ## Adding a task
 
