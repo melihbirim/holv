@@ -1,0 +1,27 @@
+holv 0
+
+cap Out { print(s: String): Unit }
+
+-- trial division: holv 0 has no list element assignment, so a sieve cannot be written yet (see issue on xs[i] = v)
+fn isPrime(n: Int) -> Bool { if n < 2 { false } else {
+  var d = 2
+  var prime = true
+  while d * d <= n and prime {
+    if n mod d == 0 {
+      prime = false
+    }
+    d = d + 1
+  }
+  prime
+} }
+
+fn main(out: Out, n: Int) -> Int
+  effects Out
+{
+  var count = 0
+  for i in 0 .. n { if isPrime(i) {
+    count = count + 1
+  } }
+  out.print(str(count))
+  0
+}

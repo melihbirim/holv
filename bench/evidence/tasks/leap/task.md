@@ -1,0 +1,1 @@
+Print leap if the year y is a leap year in the Gregorian calendar, otherwise print common. A year is a leap year if it is divisible by 4, except that years divisible by 100 are not, except that years divisible by 400 are.

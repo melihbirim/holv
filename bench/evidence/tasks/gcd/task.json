@@ -1,0 +1,2 @@
+{ "params": ["a", "b"], "visible": { "args": [12, 18], "stdout": "6" },
+  "hidden": [ { "args": [0, 5], "stdout": "5" }, { "args": [7, 0], "stdout": "7" }, { "args": [17, 13], "stdout": "1" }, { "args": [100, 75], "stdout": "25" }, { "args": [1071, 462], "stdout": "21" } ] }

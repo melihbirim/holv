@@ -1,0 +1,12 @@
+holv 0
+
+cap Out { print(s: String): Unit }
+
+fn word(i: Int) -> String { if i mod 15 == 0 { "FizzBuzz" } else { if i mod 3 == 0 { "Fizz" } else { if i mod 5 == 0 { "Buzz" } else { str(i) } } } }
+
+fn main(out: Out, n: Int) -> Int
+  effects Out
+{
+  for i in 1 .. n + 1 { out.print(word(i)) }
+  0
+}

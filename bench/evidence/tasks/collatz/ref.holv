@@ -1,0 +1,24 @@
+holv 0
+
+cap Out { print(s: String): Unit }
+
+fn steps(n: Int) -> Int {
+  var x = n
+  var count = 0
+  while x != 1 {
+    if x mod 2 == 0 {
+      x = x div 2
+    } else {
+      x = 3 * x + 1
+    }
+    count = count + 1
+  }
+  count
+}
+
+fn main(out: Out, n: Int) -> Int
+  effects Out
+{
+  out.print(str(steps(n)))
+  0
+}

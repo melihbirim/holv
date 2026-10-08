@@ -1,0 +1,12 @@
+holv 0
+
+cap Out { print(s: String): Unit }
+
+fn isLeap(y: Int) -> Bool { y mod 400 == 0 or y mod 4 == 0 and y mod 100 != 0 }
+
+fn main(out: Out, y: Int) -> Int
+  effects Out
+{
+  out.print(if isLeap(y) { "leap" } else { "common" })
+  0
+}

@@ -1,0 +1,21 @@
+holv 0
+
+cap Out { print(s: String): Unit }
+
+fn gcd(a: Int, b: Int) -> Int {
+  var x = a
+  var y = b
+  while y != 0 {
+    let r = x mod y
+    x = y
+    y = r
+  }
+  x
+}
+
+fn main(out: Out, a: Int, b: Int) -> Int
+  effects Out
+{
+  out.print(str(gcd(a, b)))
+  0
+}
