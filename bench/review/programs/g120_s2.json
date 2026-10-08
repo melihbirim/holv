@@ -1,0 +1,395 @@
+{
+ "fns": 120,
+ "seed": 2,
+ "questions": [
+  {
+   "fn": "f115",
+   "effect": "Store",
+   "answer": true
+  },
+  {
+   "fn": "f71",
+   "effect": "Store",
+   "answer": true
+  },
+  {
+   "fn": "f80",
+   "effect": "Store",
+   "answer": true
+  },
+  {
+   "fn": "f108",
+   "effect": "Clock",
+   "answer": false
+  },
+  {
+   "fn": "f37",
+   "effect": "Net",
+   "answer": true
+  },
+  {
+   "fn": "f59",
+   "effect": "Clock",
+   "answer": false
+  }
+ ],
+ "effects": {
+  "f0": [],
+  "f1": [],
+  "f2": [],
+  "f3": [],
+  "f4": [],
+  "f5": [],
+  "f6": [],
+  "f7": [],
+  "f8": [],
+  "f9": [],
+  "f10": [],
+  "f11": [],
+  "f12": [],
+  "f13": [],
+  "f14": [],
+  "f15": [],
+  "f16": [],
+  "f17": [],
+  "f18": [
+   "Store"
+  ],
+  "f19": [],
+  "f20": [],
+  "f21": [
+   "Store"
+  ],
+  "f22": [
+   "Store"
+  ],
+  "f23": [
+   "Store"
+  ],
+  "f24": [],
+  "f25": [],
+  "f26": [
+   "Clock"
+  ],
+  "f27": [
+   "Store"
+  ],
+  "f28": [],
+  "f29": [],
+  "f30": [
+   "Store"
+  ],
+  "f31": [
+   "Store"
+  ],
+  "f32": [
+   "Clock"
+  ],
+  "f33": [
+   "Store"
+  ],
+  "f34": [
+   "Clock",
+   "Net"
+  ],
+  "f35": [
+   "Clock",
+   "Store"
+  ],
+  "f36": [
+   "Clock",
+   "Store"
+  ],
+  "f37": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f38": [
+   "Clock",
+   "Store"
+  ],
+  "f39": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f40": [],
+  "f41": [],
+  "f42": [
+   "Store"
+  ],
+  "f43": [
+   "Clock",
+   "Store"
+  ],
+  "f44": [
+   "Store"
+  ],
+  "f45": [],
+  "f46": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f47": [
+   "Store"
+  ],
+  "f48": [],
+  "f49": [
+   "Store"
+  ],
+  "f50": [],
+  "f51": [
+   "Clock",
+   "Store"
+  ],
+  "f52": [
+   "Store"
+  ],
+  "f53": [
+   "Store"
+  ],
+  "f54": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f55": [
+   "Clock",
+   "Store"
+  ],
+  "f56": [
+   "Clock",
+   "Store"
+  ],
+  "f57": [
+   "Clock",
+   "Store"
+  ],
+  "f58": [
+   "Clock"
+  ],
+  "f59": [],
+  "f60": [],
+  "f61": [
+   "Clock"
+  ],
+  "f62": [
+   "Clock"
+  ],
+  "f63": [
+   "Clock"
+  ],
+  "f64": [
+   "Clock",
+   "Store"
+  ],
+  "f65": [
+   "Clock",
+   "Store"
+  ],
+  "f66": [
+   "Clock",
+   "Store"
+  ],
+  "f67": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f68": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f69": [
+   "Store"
+  ],
+  "f70": [
+   "Clock",
+   "Store"
+  ],
+  "f71": [
+   "Store"
+  ],
+  "f72": [
+   "Clock",
+   "Store"
+  ],
+  "f73": [
+   "Clock",
+   "Store"
+  ],
+  "f74": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f75": [
+   "Clock",
+   "Store"
+  ],
+  "f76": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f77": [
+   "Clock",
+   "Store"
+  ],
+  "f78": [
+   "Clock",
+   "Store"
+  ],
+  "f79": [
+   "Store"
+  ],
+  "f80": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f81": [
+   "Store",
+   "Net"
+  ],
+  "f82": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f83": [],
+  "f84": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f85": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f86": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f87": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f88": [
+   "Store",
+   "Net"
+  ],
+  "f89": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f90": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f91": [
+   "Clock",
+   "Store"
+  ],
+  "f92": [
+   "Clock",
+   "Store"
+  ],
+  "f93": [],
+  "f94": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f95": [],
+  "f96": [
+   "Clock",
+   "Store"
+  ],
+  "f97": [
+   "Clock",
+   "Store"
+  ],
+  "f98": [
+   "Clock",
+   "Store"
+  ],
+  "f99": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f100": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f101": [
+   "Clock",
+   "Store"
+  ],
+  "f102": [
+   "Clock",
+   "Store"
+  ],
+  "f103": [
+   "Clock",
+   "Store"
+  ],
+  "f104": [],
+  "f105": [
+   "Clock",
+   "Store"
+  ],
+  "f106": [],
+  "f107": [],
+  "f108": [],
+  "f109": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f110": [
+   "Clock",
+   "Store"
+  ],
+  "f111": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f112": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f113": [],
+  "f114": [
+   "Clock",
+   "Store"
+  ],
+  "f115": [
+   "Store"
+  ],
+  "f116": [
+   "Store"
+  ],
+  "f117": [
+   "Clock",
+   "Store"
+  ],
+  "f118": [],
+  "f119": [
+   "Clock",
+   "Store"
+  ]
+ }
+}

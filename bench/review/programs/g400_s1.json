@@ -1,0 +1,1519 @@
+{
+ "fns": 400,
+ "seed": 1,
+ "questions": [
+  {
+   "fn": "f179",
+   "effect": "Clock",
+   "answer": true
+  },
+  {
+   "fn": "f165",
+   "effect": "Net",
+   "answer": false
+  },
+  {
+   "fn": "f160",
+   "effect": "Store",
+   "answer": true
+  },
+  {
+   "fn": "f220",
+   "effect": "Clock",
+   "answer": true
+  },
+  {
+   "fn": "f195",
+   "effect": "Net",
+   "answer": true
+  },
+  {
+   "fn": "f178",
+   "effect": "Store",
+   "answer": false
+  }
+ ],
+ "effects": {
+  "f0": [],
+  "f1": [],
+  "f2": [],
+  "f3": [],
+  "f4": [],
+  "f5": [],
+  "f6": [
+   "Clock"
+  ],
+  "f7": [],
+  "f8": [
+   "Clock"
+  ],
+  "f9": [],
+  "f10": [],
+  "f11": [],
+  "f12": [],
+  "f13": [],
+  "f14": [
+   "Net"
+  ],
+  "f15": [],
+  "f16": [],
+  "f17": [],
+  "f18": [],
+  "f19": [],
+  "f20": [
+   "Clock"
+  ],
+  "f21": [],
+  "f22": [
+   "Store"
+  ],
+  "f23": [],
+  "f24": [
+   "Clock"
+  ],
+  "f25": [],
+  "f26": [
+   "Clock"
+  ],
+  "f27": [
+   "Clock"
+  ],
+  "f28": [
+   "Clock"
+  ],
+  "f29": [
+   "Net"
+  ],
+  "f30": [
+   "Store"
+  ],
+  "f31": [
+   "Net"
+  ],
+  "f32": [],
+  "f33": [
+   "Net"
+  ],
+  "f34": [
+   "Store"
+  ],
+  "f35": [
+   "Net"
+  ],
+  "f36": [],
+  "f37": [
+   "Clock"
+  ],
+  "f38": [
+   "Net"
+  ],
+  "f39": [
+   "Net"
+  ],
+  "f40": [
+   "Clock"
+  ],
+  "f41": [
+   "Net"
+  ],
+  "f42": [
+   "Net"
+  ],
+  "f43": [
+   "Clock"
+  ],
+  "f44": [],
+  "f45": [
+   "Clock"
+  ],
+  "f46": [
+   "Clock"
+  ],
+  "f47": [
+   "Clock",
+   "Store"
+  ],
+  "f48": [
+   "Clock"
+  ],
+  "f49": [
+   "Clock",
+   "Net"
+  ],
+  "f50": [
+   "Net"
+  ],
+  "f51": [
+   "Net"
+  ],
+  "f52": [
+   "Net"
+  ],
+  "f53": [
+   "Clock"
+  ],
+  "f54": [
+   "Clock",
+   "Net"
+  ],
+  "f55": [
+   "Net"
+  ],
+  "f56": [
+   "Clock"
+  ],
+  "f57": [
+   "Net"
+  ],
+  "f58": [],
+  "f59": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f60": [],
+  "f61": [
+   "Clock",
+   "Store"
+  ],
+  "f62": [
+   "Clock",
+   "Net"
+  ],
+  "f63": [
+   "Clock",
+   "Store"
+  ],
+  "f64": [
+   "Clock",
+   "Net"
+  ],
+  "f65": [],
+  "f66": [
+   "Clock"
+  ],
+  "f67": [
+   "Store",
+   "Net"
+  ],
+  "f68": [
+   "Store"
+  ],
+  "f69": [
+   "Net"
+  ],
+  "f70": [],
+  "f71": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f72": [
+   "Clock",
+   "Store"
+  ],
+  "f73": [
+   "Clock"
+  ],
+  "f74": [],
+  "f75": [
+   "Clock",
+   "Net"
+  ],
+  "f76": [
+   "Clock",
+   "Store"
+  ],
+  "f77": [
+   "Clock"
+  ],
+  "f78": [
+   "Clock"
+  ],
+  "f79": [
+   "Clock",
+   "Net"
+  ],
+  "f80": [
+   "Clock",
+   "Net"
+  ],
+  "f81": [
+   "Clock",
+   "Store"
+  ],
+  "f82": [
+   "Net"
+  ],
+  "f83": [
+   "Net"
+  ],
+  "f84": [
+   "Net"
+  ],
+  "f85": [
+   "Clock"
+  ],
+  "f86": [
+   "Clock",
+   "Net"
+  ],
+  "f87": [
+   "Clock",
+   "Store"
+  ],
+  "f88": [],
+  "f89": [
+   "Clock",
+   "Net"
+  ],
+  "f90": [
+   "Clock",
+   "Net"
+  ],
+  "f91": [
+   "Clock",
+   "Net"
+  ],
+  "f92": [],
+  "f93": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f94": [],
+  "f95": [
+   "Clock",
+   "Net"
+  ],
+  "f96": [
+   "Clock"
+  ],
+  "f97": [
+   "Clock",
+   "Net"
+  ],
+  "f98": [
+   "Clock"
+  ],
+  "f99": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f100": [
+   "Clock",
+   "Net"
+  ],
+  "f101": [
+   "Net"
+  ],
+  "f102": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f103": [
+   "Clock",
+   "Net"
+  ],
+  "f104": [
+   "Clock",
+   "Net"
+  ],
+  "f105": [
+   "Clock",
+   "Net"
+  ],
+  "f106": [
+   "Clock",
+   "Net"
+  ],
+  "f107": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f108": [
+   "Clock",
+   "Net"
+  ],
+  "f109": [],
+  "f110": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f111": [
+   "Clock",
+   "Net"
+  ],
+  "f112": [
+   "Clock",
+   "Net"
+  ],
+  "f113": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f114": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f115": [
+   "Store"
+  ],
+  "f116": [
+   "Clock",
+   "Net"
+  ],
+  "f117": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f118": [
+   "Clock",
+   "Store"
+  ],
+  "f119": [],
+  "f120": [
+   "Clock"
+  ],
+  "f121": [
+   "Clock",
+   "Net"
+  ],
+  "f122": [
+   "Clock",
+   "Net"
+  ],
+  "f123": [
+   "Net"
+  ],
+  "f124": [],
+  "f125": [
+   "Clock",
+   "Net"
+  ],
+  "f126": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f127": [],
+  "f128": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f129": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f130": [
+   "Store"
+  ],
+  "f131": [
+   "Clock",
+   "Net"
+  ],
+  "f132": [
+   "Net"
+  ],
+  "f133": [
+   "Net"
+  ],
+  "f134": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f135": [
+   "Clock",
+   "Net"
+  ],
+  "f136": [
+   "Store"
+  ],
+  "f137": [
+   "Clock",
+   "Net"
+  ],
+  "f138": [
+   "Clock",
+   "Net"
+  ],
+  "f139": [
+   "Clock",
+   "Net"
+  ],
+  "f140": [
+   "Clock"
+  ],
+  "f141": [
+   "Clock",
+   "Store"
+  ],
+  "f142": [
+   "Store"
+  ],
+  "f143": [],
+  "f144": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f145": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f146": [
+   "Clock"
+  ],
+  "f147": [
+   "Clock",
+   "Net"
+  ],
+  "f148": [],
+  "f149": [
+   "Store",
+   "Net"
+  ],
+  "f150": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f151": [
+   "Clock",
+   "Net"
+  ],
+  "f152": [
+   "Net"
+  ],
+  "f153": [
+   "Clock",
+   "Store"
+  ],
+  "f154": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f155": [
+   "Clock",
+   "Net"
+  ],
+  "f156": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f157": [],
+  "f158": [],
+  "f159": [
+   "Clock",
+   "Net"
+  ],
+  "f160": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f161": [
+   "Store",
+   "Net"
+  ],
+  "f162": [
+   "Clock"
+  ],
+  "f163": [
+   "Clock",
+   "Net"
+  ],
+  "f164": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f165": [
+   "Clock",
+   "Store"
+  ],
+  "f166": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f167": [],
+  "f168": [
+   "Net"
+  ],
+  "f169": [
+   "Clock",
+   "Net"
+  ],
+  "f170": [
+   "Clock",
+   "Net"
+  ],
+  "f171": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f172": [],
+  "f173": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f174": [
+   "Clock"
+  ],
+  "f175": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f176": [
+   "Clock",
+   "Store"
+  ],
+  "f177": [],
+  "f178": [
+   "Net"
+  ],
+  "f179": [
+   "Clock"
+  ],
+  "f180": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f181": [
+   "Clock",
+   "Store"
+  ],
+  "f182": [],
+  "f183": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f184": [
+   "Clock",
+   "Store"
+  ],
+  "f185": [
+   "Clock"
+  ],
+  "f186": [],
+  "f187": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f188": [
+   "Clock"
+  ],
+  "f189": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f190": [
+   "Store",
+   "Net"
+  ],
+  "f191": [
+   "Clock",
+   "Net"
+  ],
+  "f192": [],
+  "f193": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f194": [
+   "Clock"
+  ],
+  "f195": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f196": [],
+  "f197": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f198": [
+   "Clock",
+   "Store"
+  ],
+  "f199": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f200": [
+   "Clock",
+   "Net"
+  ],
+  "f201": [
+   "Clock",
+   "Net"
+  ],
+  "f202": [
+   "Net"
+  ],
+  "f203": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f204": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f205": [],
+  "f206": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f207": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f208": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f209": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f210": [
+   "Clock",
+   "Net"
+  ],
+  "f211": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f212": [
+   "Net"
+  ],
+  "f213": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f214": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f215": [
+   "Net"
+  ],
+  "f216": [
+   "Clock",
+   "Net"
+  ],
+  "f217": [
+   "Clock",
+   "Store"
+  ],
+  "f218": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f219": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f220": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f221": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f222": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f223": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f224": [
+   "Clock"
+  ],
+  "f225": [
+   "Store"
+  ],
+  "f226": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f227": [
+   "Clock"
+  ],
+  "f228": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f229": [
+   "Clock"
+  ],
+  "f230": [
+   "Clock"
+  ],
+  "f231": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f232": [
+   "Clock",
+   "Store"
+  ],
+  "f233": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f234": [
+   "Clock"
+  ],
+  "f235": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f236": [
+   "Clock",
+   "Net"
+  ],
+  "f237": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f238": [
+   "Clock",
+   "Net"
+  ],
+  "f239": [
+   "Net"
+  ],
+  "f240": [
+   "Net"
+  ],
+  "f241": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f242": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f243": [
+   "Clock",
+   "Net"
+  ],
+  "f244": [
+   "Clock",
+   "Net"
+  ],
+  "f245": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f246": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f247": [
+   "Store",
+   "Net"
+  ],
+  "f248": [
+   "Clock",
+   "Net"
+  ],
+  "f249": [
+   "Clock",
+   "Store"
+  ],
+  "f250": [
+   "Clock"
+  ],
+  "f251": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f252": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f253": [
+   "Clock",
+   "Store"
+  ],
+  "f254": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f255": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f256": [],
+  "f257": [
+   "Clock",
+   "Net"
+  ],
+  "f258": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f259": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f260": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f261": [
+   "Clock",
+   "Net"
+  ],
+  "f262": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f263": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f264": [
+   "Net"
+  ],
+  "f265": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f266": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f267": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f268": [
+   "Clock",
+   "Net"
+  ],
+  "f269": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f270": [
+   "Clock",
+   "Net"
+  ],
+  "f271": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f272": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f273": [
+   "Clock",
+   "Net"
+  ],
+  "f274": [
+   "Clock"
+  ],
+  "f275": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f276": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f277": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f278": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f279": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f280": [
+   "Clock",
+   "Net"
+  ],
+  "f281": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f282": [],
+  "f283": [
+   "Clock",
+   "Store"
+  ],
+  "f284": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f285": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f286": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f287": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f288": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f289": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f290": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f291": [
+   "Clock"
+  ],
+  "f292": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f293": [
+   "Clock"
+  ],
+  "f294": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f295": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f296": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f297": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f298": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f299": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f300": [
+   "Clock"
+  ],
+  "f301": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f302": [
+   "Net"
+  ],
+  "f303": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f304": [
+   "Clock",
+   "Net"
+  ],
+  "f305": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f306": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f307": [
+   "Clock",
+   "Net"
+  ],
+  "f308": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f309": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f310": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f311": [
+   "Clock",
+   "Net"
+  ],
+  "f312": [
+   "Clock",
+   "Net"
+  ],
+  "f313": [
+   "Clock",
+   "Store"
+  ],
+  "f314": [
+   "Clock",
+   "Net"
+  ],
+  "f315": [
+   "Clock",
+   "Net"
+  ],
+  "f316": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f317": [
+   "Clock",
+   "Store"
+  ],
+  "f318": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f319": [],
+  "f320": [
+   "Net"
+  ],
+  "f321": [
+   "Store"
+  ],
+  "f322": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f323": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f324": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f325": [
+   "Net"
+  ],
+  "f326": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f327": [
+   "Net"
+  ],
+  "f328": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f329": [
+   "Net"
+  ],
+  "f330": [
+   "Clock",
+   "Net"
+  ],
+  "f331": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f332": [
+   "Clock",
+   "Net"
+  ],
+  "f333": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f334": [
+   "Clock",
+   "Net"
+  ],
+  "f335": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f336": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f337": [
+   "Clock",
+   "Net"
+  ],
+  "f338": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f339": [
+   "Clock",
+   "Net"
+  ],
+  "f340": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f341": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f342": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f343": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f344": [
+   "Clock",
+   "Net"
+  ],
+  "f345": [],
+  "f346": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f347": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f348": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f349": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f350": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f351": [
+   "Clock"
+  ],
+  "f352": [
+   "Clock",
+   "Store"
+  ],
+  "f353": [
+   "Clock",
+   "Net"
+  ],
+  "f354": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f355": [
+   "Net"
+  ],
+  "f356": [
+   "Clock",
+   "Net"
+  ],
+  "f357": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f358": [],
+  "f359": [
+   "Clock",
+   "Store"
+  ],
+  "f360": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f361": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f362": [
+   "Clock",
+   "Net"
+  ],
+  "f363": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f364": [
+   "Store"
+  ],
+  "f365": [],
+  "f366": [
+   "Net"
+  ],
+  "f367": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f368": [
+   "Clock"
+  ],
+  "f369": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f370": [
+   "Clock",
+   "Net"
+  ],
+  "f371": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f372": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f373": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f374": [
+   "Clock",
+   "Store"
+  ],
+  "f375": [],
+  "f376": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f377": [
+   "Net"
+  ],
+  "f378": [
+   "Clock",
+   "Net"
+  ],
+  "f379": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f380": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f381": [
+   "Clock",
+   "Net"
+  ],
+  "f382": [
+   "Clock",
+   "Net"
+  ],
+  "f383": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f384": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f385": [
+   "Store",
+   "Net"
+  ],
+  "f386": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f387": [
+   "Clock",
+   "Store"
+  ],
+  "f388": [
+   "Clock",
+   "Net"
+  ],
+  "f389": [
+   "Store"
+  ],
+  "f390": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f391": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f392": [],
+  "f393": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f394": [
+   "Clock",
+   "Store"
+  ],
+  "f395": [
+   "Net"
+  ],
+  "f396": [
+   "Clock"
+  ],
+  "f397": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f398": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f399": [
+   "Clock",
+   "Store"
+  ]
+ }
+}

@@ -1,0 +1,45 @@
+{
+ "program": "g120_s1",
+ "lang": "holv",
+ "fns": 120,
+ "correct": 6,
+ "total": 6,
+ "rows": [
+  {
+   "key": "f55:Net",
+   "expected": true,
+   "got": true,
+   "correct": true
+  },
+  {
+   "key": "f97:Store",
+   "expected": false,
+   "got": false,
+   "correct": true
+  },
+  {
+   "key": "f88:Net",
+   "expected": false,
+   "got": false,
+   "correct": true
+  },
+  {
+   "key": "f65:Clock",
+   "expected": false,
+   "got": false,
+   "correct": true
+  },
+  {
+   "key": "f93:Net",
+   "expected": true,
+   "got": true,
+   "correct": true
+  },
+  {
+   "key": "f39:Net",
+   "expected": true,
+   "got": true,
+   "correct": true
+  }
+ ]
+}

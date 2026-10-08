@@ -1,0 +1,118 @@
+{
+ "fns": 40,
+ "seed": 2,
+ "questions": [
+  {
+   "fn": "f21",
+   "effect": "Store",
+   "answer": true
+  },
+  {
+   "fn": "f16",
+   "effect": "Net",
+   "answer": false
+  },
+  {
+   "fn": "f18",
+   "effect": "Store",
+   "answer": true
+  },
+  {
+   "fn": "f31",
+   "effect": "Store",
+   "answer": true
+  },
+  {
+   "fn": "f16",
+   "effect": "Clock",
+   "answer": false
+  },
+  {
+   "fn": "f25",
+   "effect": "Clock",
+   "answer": false
+  }
+ ],
+ "effects": {
+  "f0": [],
+  "f1": [],
+  "f2": [],
+  "f3": [],
+  "f4": [],
+  "f5": [],
+  "f6": [],
+  "f7": [],
+  "f8": [],
+  "f9": [],
+  "f10": [],
+  "f11": [],
+  "f12": [],
+  "f13": [],
+  "f14": [],
+  "f15": [],
+  "f16": [],
+  "f17": [],
+  "f18": [
+   "Store"
+  ],
+  "f19": [],
+  "f20": [],
+  "f21": [
+   "Store"
+  ],
+  "f22": [
+   "Store"
+  ],
+  "f23": [
+   "Store"
+  ],
+  "f24": [],
+  "f25": [],
+  "f26": [
+   "Clock"
+  ],
+  "f27": [
+   "Store"
+  ],
+  "f28": [],
+  "f29": [],
+  "f30": [
+   "Store"
+  ],
+  "f31": [
+   "Store"
+  ],
+  "f32": [
+   "Clock"
+  ],
+  "f33": [
+   "Store"
+  ],
+  "f34": [
+   "Clock",
+   "Net"
+  ],
+  "f35": [
+   "Clock",
+   "Store"
+  ],
+  "f36": [
+   "Clock",
+   "Store"
+  ],
+  "f37": [
+   "Clock",
+   "Store",
+   "Net"
+  ],
+  "f38": [
+   "Clock",
+   "Store"
+  ],
+  "f39": [
+   "Clock",
+   "Store",
+   "Net"
+  ]
+ }
+}

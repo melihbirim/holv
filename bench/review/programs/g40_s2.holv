@@ -1,0 +1,229 @@
+holv 0
+
+cap Clock { now(): Int }
+cap Store { get(k: String): Int }
+cap Net { fetch(url: String): Int }
+cap Out { print(s: String): Unit }
+
+fn f0(x: Int) -> Int
+{
+  x + 1
+}
+
+fn f1(x: Int) -> Int
+{
+  x + 2 + f0(x)
+}
+
+fn f2(x: Int) -> Int
+{
+  x + 3 + f0(x) + f1(x)
+}
+
+fn f3(x: Int) -> Int
+{
+  x + 4 + f0(x) + f1(x) + f2(x)
+}
+
+fn f4(x: Int) -> Int
+{
+  x + 5 + f0(x) + f1(x)
+}
+
+fn f5(x: Int) -> Int
+{
+  x + 6 + f4(x) + f3(x)
+}
+
+fn f6(x: Int) -> Int
+{
+  x + 7 + f1(x) + f0(x)
+}
+
+fn f7(x: Int) -> Int
+{
+  x + 8 + f0(x)
+}
+
+fn f8(x: Int) -> Int
+{
+  x + 9 + f2(x) + f4(x)
+}
+
+fn f9(x: Int) -> Int
+{
+  x + 10 + f2(x) + f7(x)
+}
+
+fn f10(x: Int) -> Int
+{
+  x + 11 + f6(x) + f8(x) + f7(x)
+}
+
+fn f11(x: Int) -> Int
+{
+  x + 12 + f1(x)
+}
+
+fn f12(x: Int) -> Int
+{
+  x + 13 + f10(x) + f2(x) + f6(x)
+}
+
+fn f13(x: Int) -> Int
+{
+  x + 14 + f0(x)
+}
+
+fn f14(x: Int) -> Int
+{
+  x + 15 + f4(x) + f8(x)
+}
+
+fn f15(x: Int) -> Int
+{
+  x + 16 + f6(x) + f14(x) + f2(x)
+}
+
+fn f16(x: Int) -> Int
+{
+  x + 17 + f9(x)
+}
+
+fn f17(x: Int) -> Int
+{
+  x + 18 + f13(x)
+}
+
+fn f18(store: Store, x: Int) -> Int
+  effects Store
+{
+  x + 19 + f16(x) + store.get("k18")
+}
+
+fn f19(x: Int) -> Int
+{
+  x + 20 + f1(x) + f16(x) + f0(x)
+}
+
+fn f20(x: Int) -> Int
+{
+  x + 21 + f7(x) + f13(x)
+}
+
+fn f21(store: Store, x: Int) -> Int
+  effects Store
+{
+  x + 22 + f17(x) + f10(x) + f14(x) + store.get("k21")
+}
+
+fn f22(store: Store, x: Int) -> Int
+  effects Store
+{
+  x + 23 + f10(x) + f21(store, x) + f11(x)
+}
+
+fn f23(store: Store, x: Int) -> Int
+  effects Store
+{
+  x + 24 + f22(store, x) + f18(store, x) + f7(x)
+}
+
+fn f24(x: Int) -> Int
+{
+  x + 25 + f5(x) + f19(x)
+}
+
+fn f25(x: Int) -> Int
+{
+  x + 26 + f13(x) + f17(x)
+}
+
+fn f26(clock: Clock, x: Int) -> Int
+  effects Clock
+{
+  x + 27 + f12(x) + f17(x) + clock.now()
+}
+
+fn f27(store: Store, x: Int) -> Int
+  effects Store
+{
+  x + 28 + f21(store, x) + f11(x) + store.get("k27")
+}
+
+fn f28(x: Int) -> Int
+{
+  x + 29 + f0(x) + f20(x) + f15(x)
+}
+
+fn f29(x: Int) -> Int
+{
+  x + 30 + f24(x) + f19(x) + f13(x)
+}
+
+fn f30(store: Store, x: Int) -> Int
+  effects Store
+{
+  x + 31 + f23(store, x) + f20(x) + f13(x)
+}
+
+fn f31(store: Store, x: Int) -> Int
+  effects Store
+{
+  x + 32 + f9(x) + store.get("k31")
+}
+
+fn f32(clock: Clock, x: Int) -> Int
+  effects Clock
+{
+  x + 33 + f26(clock, x)
+}
+
+fn f33(store: Store, x: Int) -> Int
+  effects Store
+{
+  x + 34 + f18(store, x)
+}
+
+fn f34(clock: Clock, net: Net, x: Int) -> Int
+  effects Clock, Net
+{
+  x + 35 + f29(x) + f26(clock, x) + f12(x) + net.fetch("u34")
+}
+
+fn f35(clock: Clock, store: Store, x: Int) -> Int
+  effects Clock, Store
+{
+  x + 36 + f11(x) + f32(clock, x) + f27(store, x) + clock.now()
+}
+
+fn f36(clock: Clock, store: Store, x: Int) -> Int
+  effects Clock, Store
+{
+  x + 37 + f22(store, x) + f6(x) + clock.now()
+}
+
+fn f37(clock: Clock, store: Store, net: Net, x: Int) -> Int
+  effects Clock, Store, Net
+{
+  x + 38 + f9(x) + f23(store, x) + f34(clock, net, x)
+}
+
+fn f38(clock: Clock, store: Store, x: Int) -> Int
+  effects Clock, Store
+{
+  x + 39 + f36(clock, store, x) + f19(x)
+}
+
+fn f39(clock: Clock, store: Store, net: Net, x: Int) -> Int
+  effects Clock, Store, Net
+{
+  x + 40 + f20(x) + f33(store, x) + f37(clock, store, net, x)
+}
+
+fn main(clock: Clock, store: Store, net: Net, out: Out, x: Int) -> Int
+  effects Clock, Store, Net, Out
+{
+  out.print(str(f39(clock, store, net, x)))
+  0
+}

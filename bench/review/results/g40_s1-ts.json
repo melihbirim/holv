@@ -1,0 +1,45 @@
+{
+ "program": "g40_s1",
+ "lang": "ts",
+ "fns": 40,
+ "correct": 6,
+ "total": 6,
+ "rows": [
+  {
+   "key": "f28:Store",
+   "expected": false,
+   "got": false,
+   "correct": true
+  },
+  {
+   "key": "f31:Clock",
+   "expected": false,
+   "got": false,
+   "correct": true
+  },
+  {
+   "key": "f30:Store",
+   "expected": true,
+   "got": true,
+   "correct": true
+  },
+  {
+   "key": "f21:Store",
+   "expected": false,
+   "got": false,
+   "correct": true
+  },
+  {
+   "key": "f32:Net",
+   "expected": false,
+   "got": false,
+   "correct": true
+  },
+  {
+   "key": "f39:Net",
+   "expected": true,
+   "got": true,
+   "correct": true
+  }
+ ]
+}
