@@ -6,3 +6,4 @@ bench/rank_zig
 *.o
 bench/evidence/work/
 bench/evidence/results/
+!bench/evidence/results-published/

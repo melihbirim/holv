@@ -1,0 +1,12 @@
+{"task":"collatz","lang":"ts","attempts":1,"passed":true,"stages":["pass"],"agent_ms":22306,"first_try":true,"compile_failures":0,"silent_wrong":false}
+{"task":"collatz","lang":"holv","attempts":1,"passed":true,"stages":["pass"],"agent_ms":16432,"first_try":true,"compile_failures":0,"silent_wrong":false}
+{"task":"fib","lang":"ts","attempts":1,"passed":true,"stages":["pass"],"agent_ms":12785,"first_try":true,"compile_failures":0,"silent_wrong":false}
+{"task":"fib","lang":"holv","attempts":3,"passed":true,"stages":["compile","compile","pass"],"agent_ms":80213,"first_try":false,"compile_failures":2,"silent_wrong":false}
+{"task":"fizzbuzz","lang":"ts","attempts":1,"passed":true,"stages":["pass"],"agent_ms":10834,"first_try":true,"compile_failures":0,"silent_wrong":false}
+{"task":"fizzbuzz","lang":"holv","attempts":3,"passed":true,"stages":["compile","compile","pass"],"agent_ms":91659,"first_try":false,"compile_failures":2,"silent_wrong":false}
+{"task":"gcd","lang":"ts","attempts":1,"passed":true,"stages":["pass"],"agent_ms":11310,"first_try":true,"compile_failures":0,"silent_wrong":false}
+{"task":"gcd","lang":"holv","attempts":1,"passed":true,"stages":["pass"],"agent_ms":20356,"first_try":true,"compile_failures":0,"silent_wrong":false}
+{"task":"leap","lang":"ts","attempts":1,"passed":true,"stages":["pass"],"agent_ms":15523,"first_try":true,"compile_failures":0,"silent_wrong":false}
+{"task":"leap","lang":"holv","attempts":1,"passed":true,"stages":["pass"],"agent_ms":16123,"first_try":true,"compile_failures":0,"silent_wrong":false}
+{"task":"prime_count","lang":"ts","attempts":1,"passed":true,"stages":["pass"],"agent_ms":13013,"first_try":true,"compile_failures":0,"silent_wrong":false}
+{"task":"prime_count","lang":"holv","attempts":4,"passed":true,"stages":["compile","compile","compile","pass"],"agent_ms":145860,"first_try":false,"compile_failures":3,"silent_wrong":false}

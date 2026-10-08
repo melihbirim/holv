@@ -31,6 +31,21 @@ The number that matters is silent-wrong: a program that looks right and is not. 
 
 Known biases, stated: the tasks are small and integer-only because holv 0 has no strings beyond `+` and no `Map`; that favours neither language but limits generality. The holv prompt is longer (the spec), which costs the model context. Six tasks is a pilot, not a study; add tasks before trusting a margin smaller than two.
 
+## Results so far
+
+**2026-10-08, pilot, claude-haiku-4-5, six integer tasks, max 5 attempts** (`results/2026-10-08T09-50-49-021Z.jsonl`):
+
+| | TS | holv |
+|---|---|---|
+| passed | 6/6 | 6/6 |
+| first-try pass | 6 | 3 |
+| mean attempts | 1.00 | 1.83 |
+| compile failures | 0 | 7 |
+| silent wrong (final) | 0 | 0 |
+| agent seconds | 86 | 370 |
+
+Reading: holv lost on cost and could not show its benefit. Every holv failure was a compile error that the message then fixed; every task ended correct in both languages. Three tasks cost Haiku two or three extra rounds in a language it had learned from the spec thirty seconds earlier, against JavaScript it knows by heart: unfamiliarity costs about 4x the time on this pilot. Silent-wrong was zero in both, so these tasks are too easy to test the claim holv exists for; the benefit side needs tasks with real traps (overflow, aliasing, an effect the program must not have). The harness did not record which compile errors occurred, which was the most useful data; it does now (`feedback` per attempt, every attempt file kept). Numbers published whichever way they go.
+
 ## Adding a task
 
 `tasks/<name>/`: `task.md`, `task.json` (`params`, `visible`, `hidden`), `ref.holv` and `ref.mjs` (must pass; the harness is validated against them), optionally `wrong.holv`/`wrong.mjs` (a plausible wrong answer that passes the visible case) for the feedback-loop check.

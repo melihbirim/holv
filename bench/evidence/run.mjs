@@ -71,17 +71,18 @@ for (const name of TASKS) {
     const work = path.join(HERE, "work", name, lang);
     fs.rmSync(work, { recursive: true, force: true }); fs.mkdirSync(work, { recursive: true });
     const file = path.join(work, lang === "holv" ? "solution.holv" : "solution.mjs");
-    const row = { task: name, lang, attempts: 0, passed: false, stages: [], agent_ms: 0 };
+    const row = { task: name, lang, attempts: 0, passed: false, stages: [], feedback: [], agent_ms: 0 };
     let feedback = null;
     for (let i = 1; i <= MAX; i++) {
       row.attempts = i;
       const t = Date.now();
       const a = spawnSync("sh", ["-c", AGENT], { input: prompt(lang, task, file, feedback), encoding: "utf8", env: { ...env, HOLV_TASK: name, HOLV_LANG: lang, HOLV_FILE: file }, timeout: 300000 });
       row.agent_ms += Date.now() - t;
-      if (!fs.existsSync(file)) { row.stages.push("no_file"); feedback = `no file was written at ${file}`; continue; }
+      if (!fs.existsSync(file)) { row.stages.push("no_file"); feedback = `no file was written at ${file}`; row.feedback.push(feedback); continue; }
+      fs.copyFileSync(file, `${file}.attempt${i}`); // keep every attempt; the failures are the data
       const v = verify(lang, file, task);
       if (!v) { row.passed = true; row.stages.push("pass"); break; }
-      row.stages.push(v.stage); feedback = v.report;
+      row.stages.push(v.stage); feedback = v.report; row.feedback.push(v.report.slice(0, 2000));
     }
     row.first_try = row.stages[0] === "pass";
     row.compile_failures = row.stages.filter((s) => s === "compile").length;
