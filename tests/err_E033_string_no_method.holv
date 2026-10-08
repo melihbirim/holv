@@ -1,0 +1,4 @@
+holv 0
+
+-- expect: error E033
+fn f(s: String) -> String { s.upper() }

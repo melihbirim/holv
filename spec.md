@@ -41,7 +41,8 @@ Literals `1` `1.5` `"s"` `true`. Operators by precedence: `or` `and` `== !=` `< 
 `if c { a } else { b }` is an expression; both branches same type. `if c { ... }` without `else` is a statement: its block must be `Unit`. `while c { ... }` loops while `c` is true. fns may call themselves.
 `Post { id: 1, up: 2, created: 0 }` struct literal, all fields required.
 `xs[i]` (out of range stops the program) `xs[i] = v` (same bounds; assignment never grows a list) `xs.len` `xs.push(v)` `xs.sortBy(fn(a, b) { ... })` comparator returns Int.
-Builtins: `sqrt(Float) -> Float` `floor(Float) -> Int` `toFloat(Int) -> Float` `big(Int) -> Big` `toInt(Big) -> Int` `str(x) -> String`.
+Builtins: `sqrt(Float) -> Float` `floor(Float) -> Int` `toFloat(Int) -> Float` `big(Int) -> Big` `toInt(Big) -> Int` `str(x) -> String` `strToInt(String) -> Int` (stops the program if not an integer) `jsonString(String) -> String` (quoted and escaped).
+Strings: `s.len`, `s.slice(from, to)`, `s.contains(t)`, `s.split(sep) -> List<String>`, `s.trim()`, `s.replace(a, b)` (every occurrence), `s.charAt(i)` (one character; out of range stops the program). `+` joins.
 `hole T` compiles and runs; reaching it stops the program with the scope as JSON (exit 3). Runtime errors (index out of range, Int overflow, a cap that throws) are JSON with `at: {fn, line, col}` pointing into the `.holv`, `fix.do`, exit 4.
 A `fn(a, b) { ... }` literal is only allowed as the argument of `sortBy`.
 

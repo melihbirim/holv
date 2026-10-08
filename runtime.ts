@@ -50,6 +50,19 @@ export function toInt(b: bigint, at: string): number {
     throw new RuntimeError("IntOverflow", `toInt(${b}) is outside the safe Int range ±9007199254740991`, "keep the value as Big, or reduce it (mod) before converting", at);
   return Number(b);
 }
+// String helpers that can fail do so loudly, with a position.
+export function strToInt(s: string, at: string): number {
+  const v = s.trim();
+  if (!/^[+-]?\d+$/.test(v)) throw new RuntimeError("NotAnInt", `strToInt(${JSON.stringify(s)}): not an integer`, "check the string with a comparison first, or trim and validate the input before converting", at);
+  const n = Number(v);
+  if (!Number.isSafeInteger(n)) throw new RuntimeError("IntOverflow", `strToInt(${JSON.stringify(s)}) is outside the safe Int range`, "parse into a Big instead once a strToBig builtin exists, or reject the input", at);
+  return n;
+}
+export function strAt(s: string, i: number, at: string): string {
+  if (!Number.isInteger(i) || i < 0 || i >= s.length)
+    throw new RuntimeError("IndexOutOfRange", `charAt(${i}) out of range for a String of length ${s.length}`, "guard with 'if i < s.len { ... }'", at);
+  return s[i] as string;
+}
 export function setAt<T>(xs: T[], i: number, v: T, at: string): void {
   if (!Number.isInteger(i) || i < 0 || i >= xs.length)
     throw new RuntimeError("IndexOutOfRange", `index ${i} out of range for a List of length ${xs.length}`, `guard the index with 'if i < xs.len { ... }' or push to grow the list; assignment never extends it`, at);

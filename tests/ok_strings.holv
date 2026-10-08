@@ -1,0 +1,14 @@
+holv 0
+
+-- expect: run => 3|b|a-b-c|true|x,y|"he said \"hi\""|42|7
+cap Out { print(s: String): Unit }
+
+fn main(out: Out) -> Int
+  effects Out
+{
+  let s = "a,b,c"
+  let parts = s.split(",")
+  let joined = parts[0] + "-" + parts[1] + "-" + parts[2]
+  out.print(str(parts.len) + "|" + s.charAt(2) + "|" + joined + "|" + str(s.contains("b,")) + "|" + "  x,y ".trim() + "|" + jsonString("he said \"hi\"") + "|" + str(strToInt(" 42 ")) + "|" + str("a,b,c".replace(",", "").len + 4))
+  0
+}

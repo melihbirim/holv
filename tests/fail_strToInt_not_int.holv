@@ -1,0 +1,4 @@
+holv 0
+
+-- expect: run-fail "error":"NotAnInt"
+fn main() -> Int { strToInt("12x") }

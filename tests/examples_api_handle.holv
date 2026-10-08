@@ -13,11 +13,10 @@ fn json(status: Int, body: String) -> Response
   example json(200, "{}").status == 200
 { Response { status: status, body: body } }
 
--- KNOWN BUG: does not escape an embedded quote, so a name like bread "rye" yields invalid JSON.
--- holv has no string replace or char access yet (#14); a JSON cap or builtin is the real fix.
 fn quote(s: String) -> String
   example quote("a") == "\"a\""
-{ "\"" + s + "\"" }
+  example quote("bread \"rye\"") == "\"bread \\\"rye\\\"\""
+{ jsonString(s) }
 
 fn listItems(store: Store) -> String
   effects Store
