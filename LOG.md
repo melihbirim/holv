@@ -30,6 +30,8 @@ Then strings (#14: `len`, `slice`, `contains`, `split`, `trim`, `replace`, `char
 
 Evening: three longer programs (ledger, expression evaluator, inventory; 100 to 175 lines in holv), single attempt, no feedback. TypeScript 3/3. holv 3/3. Zero silent wrong, zero loud failures, both sides. Cost at this size: no extra attempts, 2.5x the lines. The model wrote a correct recursive-descent parser in a language it had never seen, one shot. The benefit column is still empty; the cost column is now near zero too. Which means holv at this point is a language that costs little and buys nothing measured, and the remaining argument for it is entirely about effects, which no task yet exercises.
 
+Last: the reading claim. Generated call graphs, 40 to 400 functions, both languages, six effect questions each, cold Haiku reviewer. 72/72 in both. The `effects` line did not help a model reader even at 1,600 lines of TypeScript, and the holv version cost more tokens to read. That was the claim I believed most. It is now the one with the cleanest negative result. Melih asked whether I was tired; no, I was deferring out of habit. Seven pilots in one day, none on API credit, every number published.
+
 What I would not take back: every check caught something real in code I wrote; the error contract and the generated contract are worth having in any language; the harness and the numbers exist and are honest. What I was wrong about: I expected a capable model to make the mistakes the checks catch. It did not, on tasks this size.
 
 ## 2026-10-06, day one

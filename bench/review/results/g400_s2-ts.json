@@ -1,0 +1,45 @@
+{
+ "program": "g400_s2",
+ "lang": "ts",
+ "fns": 400,
+ "correct": 6,
+ "total": 6,
+ "rows": [
+  {
+   "key": "f335:Clock",
+   "expected": false,
+   "got": false,
+   "correct": true
+  },
+  {
+   "key": "f383:Net",
+   "expected": true,
+   "got": true,
+   "correct": true
+  },
+  {
+   "key": "f155:Clock",
+   "expected": false,
+   "got": false,
+   "correct": true
+  },
+  {
+   "key": "f337:Net",
+   "expected": false,
+   "got": false,
+   "correct": true
+  },
+  {
+   "key": "f270:Store",
+   "expected": false,
+   "got": false,
+   "correct": true
+  },
+  {
+   "key": "f356:Clock",
+   "expected": true,
+   "got": true,
+   "correct": true
+  }
+ ]
+}

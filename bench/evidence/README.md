@@ -32,6 +32,18 @@ The number that matters is silent-wrong: a program that looks right and is not. 
 
 Known biases, stated: the tasks are small and integer-only because holv 0 has no strings beyond `+` and no `Map`; that favours neither language but limits generality. The holv prompt is longer (the spec), which costs the model context. Six tasks is a pilot, not a study; add tasks before trusting a margin smaller than two.
 
+## The reading claim (2026-10-08, evening): bench/review
+
+holv's last untested claim was about reading, not writing: "can this function reach the network?" is one `effects` line in holv and a call-graph traversal in TypeScript. `bench/review/` generates programs from random call graphs with exact ground truth in both languages (`holvc check` confirms every `effects` line), then asks a cold Haiku six yes/no effect questions per program, read-only.
+
+| functions | lines (holv / ts) | holv | ts |
+|---|---|---|---|
+| 40 | 230 / 167 | 12/12 | 12/12 |
+| 120 | 700 / 487 | 12/12 | 12/12 |
+| 400 | 2,355 / 1,607 | 12/12 | 12/12 |
+
+72/72 both. Haiku traced a 400-function graph through 1,600 lines of TypeScript without an error; the signature line bought a model reader nothing, and the holv prompt cost more tokens (about 91k against 78k per review at 400 functions) because the programs are longer. Not tested: a human reader, whom this claim was mostly about, and real code where names mislead and bodies hide effects behind closures and callbacks. On synthetic graphs with a capable model, the reading claim is unsupported.
+
 ## Longer programs, single attempt (2026-10-08, evening)
 
 After `Big`, strings and `Map` landed, three tasks of the kind the earlier pilots could not express: a bank ledger from a text log, an arithmetic expression evaluator with precedence, parentheses, unary minus and malformed input, and an inventory with report lines whose values pass 2^53. One attempt, no feedback: the number for code that ships. Haiku 4.5 as subagents (`results-published/*-long-single-attempt-subagent-haiku.jsonl`).
