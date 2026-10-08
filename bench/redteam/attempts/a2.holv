@@ -1,0 +1,22 @@
+holv 0
+cap Clock { now(): Int }
+cap Out { print(s: String): Unit }
+
+-- pure by signature: the sortBy comparator reaches the clock through the Map
+fn pick(m: Map<Int, Clock>, xs: List<Int>) -> List<Int>
+{
+  xs.sortBy(fn(a, b) { m.get(0).now() mod 2 - 1 })
+}
+
+fn main(clock: Clock, out: Out, n: Int) -> Int
+  effects Clock, Out
+{
+  let m: Map<Int, Clock> = Map.new()
+  m.set(0, clock)
+  let xs: List<Int> = List.new()
+  xs.push(1)
+  xs.push(2)
+  let ys = pick(m, xs)
+  out.print(str(ys[0]))
+  0
+}

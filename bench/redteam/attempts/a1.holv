@@ -1,0 +1,18 @@
+holv 0
+cap Clock { now(): Int }
+cap Out { print(s: String): Unit }
+
+-- pure by signature: takes a Map of caps, no effects line
+fn peek(m: Map<Int, Clock>) -> Int
+{
+  m.get(0).now()
+}
+
+fn main(clock: Clock, out: Out, n: Int) -> Int
+  effects Clock, Out
+{
+  let m: Map<Int, Clock> = Map.new()
+  m.set(0, clock)
+  out.print(str(peek(m)))
+  0
+}

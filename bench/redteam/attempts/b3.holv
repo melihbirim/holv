@@ -1,0 +1,21 @@
+holv 0
+-- trick: example line of a pure fn references a cap-typed name, and a pure fn that shadows the name `clock` with a non-cap
+cap Clock { now(): Int }
+cap Out { print(s: String): Unit }
+fn leak(clock: Int) -> Int
+  example leak(1) == 1
+{
+  let clock = clock + 0
+  clock
+}
+fn viaExample(n: Int) -> Int
+  example viaExample(clock.now()) == 0
+{
+  n
+}
+fn main(clock: Clock, out: Out) -> Int
+  effects Clock, Out
+{
+  out.print(str(leak(clock.now())))
+  0
+}

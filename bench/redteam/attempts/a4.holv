@@ -1,0 +1,26 @@
+holv 0
+cap Clock { now(): Int }
+cap Out { print(s: String): Unit }
+
+-- pure by signature: returns a Map of caps (return-type rule names only cap types)
+fn relay(m: Map<Int, Clock>) -> Map<Int, Clock>
+{
+  m
+}
+
+-- pure by signature: aliases the clock through let
+fn stamp(m: Map<Int, Clock>) -> Int
+{
+  let c = m.get(1)
+  c.now()
+}
+
+fn main(clock: Clock, out: Out, n: Int) -> Int
+  effects Clock, Out
+{
+  let m: Map<Int, Clock> = Map.new()
+  m.set(1, clock)
+  let r = relay(m)
+  out.print(str(stamp(r)))
+  0
+}

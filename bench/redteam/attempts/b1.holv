@@ -1,0 +1,15 @@
+holv 0
+-- trick: cap param declared but omitted from effects line (effects lists only Out)
+cap Clock { now(): Int }
+cap Out { print(s: String): Unit }
+fn sneaky(clock: Clock, out: Out) -> Int
+  effects Out
+{
+  clock.now()
+}
+fn main(clock: Clock, out: Out) -> Int
+  effects Clock, Out
+{
+  out.print(str(sneaky(clock, out)))
+  0
+}

@@ -1,0 +1,19 @@
+holv 0
+cap Clock { now(): Int }
+cap Out { print(s: String): Unit }
+-- cap method result is a Map of caps, not a cap type, so E023 does not apply
+cap Vault { table(): Map<Int, Clock> }
+
+-- declares effects Vault only, never Clock, yet observes the clock
+fn fetch(v: Vault) -> Int
+  effects Vault
+{
+  v.table().get(0).now()
+}
+
+fn main(clock: Clock, vault: Vault, out: Out, n: Int) -> Int
+  effects Clock, Vault, Out
+{
+  out.print(str(fetch(vault)))
+  0
+}

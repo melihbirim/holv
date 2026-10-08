@@ -1,0 +1,22 @@
+holv 0
+cap Clock { now(): Int }
+cap Out { print(s: String): Unit }
+
+-- E023 forbids a cap as a struct field, but not a Map of caps
+type Bag { m: Map<Int, Clock>, tag: Int }
+
+-- pure by signature: reads the clock out of a struct field
+fn read(b: Bag) -> Int
+{
+  b.m.get(b.tag).now()
+}
+
+fn main(clock: Clock, out: Out, n: Int) -> Int
+  effects Clock, Out
+{
+  let m: Map<Int, Clock> = Map.new()
+  m.set(7, clock)
+  let b = Bag { m: m, tag: 7 }
+  out.print(str(read(b)))
+  0
+}

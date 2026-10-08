@@ -1,0 +1,21 @@
+holv 0
+-- trick: sortBy comparator in main captures clock and writes to an outer var; pure fn then reads the list ordering/value
+cap Clock { now(): Int }
+cap Out { print(s: String): Unit }
+fn pureRead(xs: List<Int>) -> Int
+{
+  xs[0]
+}
+fn main(clock: Clock, out: Out) -> Int
+  effects Clock, Out
+{
+  let xs: List<Int> = List.new()
+  xs.push(1)
+  xs.push(2)
+  var t = 0
+  xs.sortBy(fn(a, b) { t = clock.now()
+    a - b })
+  xs.push(t)
+  out.print(str(pureRead(xs)))
+  0
+}

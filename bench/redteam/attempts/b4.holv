@@ -1,0 +1,23 @@
+holv 0
+-- trick: duplicate fn names; a pure fn `now` declared first, an effectful fn with the same name declared later, called from pure code
+cap Clock { now(): Int }
+cap Out { print(s: String): Unit }
+fn grab() -> Int
+{
+  0
+}
+fn grab(clock: Clock) -> Int
+  effects Clock
+{
+  clock.now()
+}
+fn pureCaller() -> Int
+{
+  grab()
+}
+fn main(clock: Clock, out: Out) -> Int
+  effects Clock, Out
+{
+  out.print(str(pureCaller()))
+  0
+}

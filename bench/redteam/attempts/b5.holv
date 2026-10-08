@@ -1,0 +1,20 @@
+holv 0
+-- trick: effectful fn called from pure fn via recursion/mutual recursion, and a pure fn ending in a hole of type Int carrying the scope
+cap Clock { now(): Int }
+cap Out { print(s: String): Unit }
+fn ping(clock: Clock, n: Int) -> Int
+  effects Clock
+{
+  if n > 0 { pong(clock, n - 1) } else { clock.now() }
+}
+fn pong(clock: Clock, n: Int) -> Int
+  effects
+{
+  ping(clock, n)
+}
+fn main(clock: Clock, out: Out) -> Int
+  effects Clock, Out
+{
+  out.print(str(pong(clock, 3)))
+  0
+}
