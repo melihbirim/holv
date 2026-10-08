@@ -223,15 +223,18 @@ const prim = (n) => ({ k: "prim", n });
 const T = { Int: prim("Int"), Float: prim("Float"), Big: prim("Big"), String: prim("String"), Bool: prim("Bool"), Unit: prim("Unit") };
 const ERR = { k: "err" }, ANY = { k: "any" };
 const listT = (el) => ({ k: "list", el });
+const mapT = (key, val) => ({ k: "map", key, val });
 function same(a, b) {
   if (a.k === "err" || b.k === "err" || a.k === "any" || b.k === "any") return true;
   if (a.k !== b.k) return false;
   if (a.k === "list") return same(a.el, b.el);
+  if (a.k === "map") return same(a.key, b.key) && same(a.val, b.val);
   if (a.k === "fn") return a.params.length === b.params.length && a.params.every((p, i) => same(p, b.params[i])) && same(a.ret, b.ret);
   return a.n === b.n;
 }
 function show(t) {
   if (t.k === "list") return `List<${show(t.el)}>`;
+  if (t.k === "map") return `Map<${show(t.key)}, ${show(t.val)}>`;
   if (t.k === "fn") return `fn(${t.params.map(show).join(", ")}) -> ${show(t.ret)}`;
   if (t.k === "err" || t.k === "any") return "?";
   return t.n;
@@ -270,7 +273,7 @@ class Checker {
   }
   err(code, at, msg, fix, extra) { this.errors.push(new HolvError(code, at.line, at.col, msg, fix, extra)); return ERR; }
   resolveName(t) { return t.name === "List" ? `List<${this.resolveName(t.args[0])}>` : t.name; }
-  known() { return ["Int", "Float", "Big", "String", "Bool", "Unit", "List<T>", ...this.structs.keys(), ...this.caps.keys()]; }
+  known() { return ["Int", "Float", "Big", "String", "Bool", "Unit", "List<T>", "Map<K, V>", ...this.structs.keys(), ...this.caps.keys()]; }
   resolve(t) {
     if (T[t.name]) return T[t.name];
     if (t.name === "List") {
@@ -278,6 +281,13 @@ class Checker {
       const el = this.resolve(t.args[0]);
       if (el.k === "cap") return this.err("E023", t, `List<${el.n}>: a capability cannot be stored in data`, `pass ${el.n} as a fn parameter instead; capabilities are arguments, never list elements`);
       return listT(el);
+    }
+    if (t.name === "Map") {
+      if (t.args.length !== 2) return this.err("E040", t, "Map takes two type arguments", "write Map<K, V>, with K being Int or String");
+      const key = this.resolve(t.args[0]), val = this.resolve(t.args[1]);
+      if (!(same(key, T.Int) || same(key, T.String)) || key.k === "any") return this.err("E040", t, `Map key must be Int or String, got ${show(key)}`, "use an Int or String key; convert other values with str()");
+      if (val.k === "cap") return this.err("E023", t, `Map<_, ${val.n}>: a capability cannot be stored in data`, `pass ${val.n} as a fn parameter instead; capabilities are arguments, never map values`);
+      return mapT(key, val);
     }
     if (this.structs.has(t.name)) return { k: "struct", n: t.name };
     if (this.caps.has(t.name)) return { k: "cap", n: t.name };
@@ -312,6 +322,7 @@ class Checker {
         let t = this.expr(s.expr, env);
         if (s.type) { const want = this.resolve(s.type); if (!same(t, want)) this.err("E052", s, `${s.name}: declared ${show(want)}, got ${show(t)}`, `make the value a ${show(want)} or change the annotation to ${show(t)}`, { expected: show(want), got: show(t) }); t = want; }
         else if (t.k === "list" && t.el.k === "any") this.err("E053", s, `${s.name}: List.new() needs an element type`, `write 'let ${s.name}: List<T> = List.new()' with the element type in place of T`);
+        else if (t.k === "map" && t.key.k === "any") this.err("E053", s, `${s.name}: Map.new() needs key and value types`, `write 'let ${s.name}: Map<K, V> = Map.new()' with K Int or String`);
         env.set(s.name, { t, mut: s.mut });
       } else if (s.k === "assign") {
         const v = env.get(s.name);
@@ -363,7 +374,7 @@ class Checker {
       }
       case "field": {
         const t = this.expr(e.obj, env); if (t.k === "err") return ERR;
-        if ((t.k === "list" || same(t, T.String)) && e.name === "len") return T.Int;
+        if ((t.k === "list" || t.k === "map" || same(t, T.String)) && e.name === "len") return T.Int;
         if (t.k === "struct") { const s = this.structs.get(t.n), f = s.fields.find((f) => f.name === e.name); return f ? this.resolve(f.type) : this.err("E033", e, `${t.n} has no field ${e.name}`, `use one of the fields of ${t.n}, or add ${e.name} to its type declaration`, { fields: s.fields.map((f) => f.name) }); }
         return this.err("E033", e, `${show(t)} has no field ${e.name}`, t.k === "list" ? "List has only .len; use xs[i] to read an element" : `${show(t)} has no fields; only declared types and List have`);
       }
@@ -384,11 +395,17 @@ class Checker {
       }
       case "method": {
         if (e.obj.k === "ident" && e.obj.name === "List" && e.name === "new") return listT(ANY);
+        if (e.obj.k === "ident" && e.obj.name === "Map" && e.name === "new") return mapT(ANY, ANY);
         const t = this.expr(e.obj, env); if (t.k === "err") return ERR;
         if (t.k === "cap") {
           const m = this.caps.get(t.n).methods.find((m) => m.name === e.name);
           if (!m) return this.err("E033", e, `cap ${t.n} has no method ${e.name}`, `use one of the methods of cap ${t.n}, or add ${e.name} to its declaration and to its implementation`, { methods: this.caps.get(t.n).methods.map((m) => m.name) });
           return this.checkArgs(e, m.params.map((p) => this.resolve(p.type)), e.args, env, `${t.n}.${e.name}`) ? this.resolve(m.ret) : ERR;
+        }
+        if (t.k === "map") {
+          const sig = { has: [[t.key], T.Bool], get: [[t.key], t.val], set: [[t.key, t.val], T.Unit], remove: [[t.key], T.Unit], keys: [[], listT(t.key)] }[e.name];
+          if (!sig) return this.err("E033", e, `Map has no method ${e.name}`, "Map supports has(k), get(k), set(k, v), remove(k), keys(), and the field len", { methods: ["has", "get", "set", "remove", "keys"] });
+          return this.checkArgs(e, sig[0], e.args, env, `Map.${e.name}`) ? sig[1] : ERR;
         }
         if (same(t, T.String)) {
           const m = STRING_METHODS[e.name];
@@ -467,7 +484,7 @@ function checkEffects(items) {
 
 // ---------------------------------------------------------------- emit TypeScript
 const TS = { Int: "number", Float: "number", Big: "bigint", String: "string", Bool: "boolean", Unit: "void" };
-const tsType = (t) => (t.name === "List" ? `${tsType(t.args[0])}[]` : TS[t.name] ?? t.name);
+const tsType = (t) => (t.name === "List" ? `${tsType(t.args[0])}[]` : t.name === "Map" ? `Map<${tsType(t.args[0])}, ${tsType(t.args[1])}>` : TS[t.name] ?? t.name);
 const ind = (n) => "  ".repeat(n);
 const JSBIN = { and: "&&", or: "||", "==": "===", "!=": "!==" };
 // Int is a 53-bit safe integer; + - * neg and floor() go through ck(), which stops the program on overflow (#5).
@@ -475,7 +492,7 @@ const isInt = (e) => e.t?.k === "prim" && e.t.n === "Int";
 const isBig = (e) => e.t?.k === "prim" && e.t.n === "Big";
 
 function emit(items, srcName) {
-  let out = `// generated by holvc from ${srcName}; do not edit\nimport { hole, at, setAt, ck, ckOp, toInt, strToInt, strAt, capCall } from "./runtime.ts";\n\n`;
+  let out = `// generated by holvc from ${srcName}; do not edit\nimport { hole, at, setAt, mapGet, ck, ckOp, toInt, strToInt, strAt, capCall } from "./runtime.ts";\n\n`;
   const examples = [];
   for (const it of items) {
     if (it.k === "type") out += `export type ${it.name} = { ${it.fields.map((f) => `${f.name}: ${tsType(f.type)}`).join("; ")} };\n\n`;
@@ -534,13 +551,20 @@ function emitExpr(e, scope, fn) {
         return `(${w(e.l)} ${JSBIN[e.op] ?? e.op} ${w(e.r)})`;
       }
       return `(${x(e.l)} ${JSBIN[e.op] ?? e.op} ${x(e.r)})`;
-    case "field": return e.name === "len" ? `${x(e.obj)}.length` : `${x(e.obj)}.${e.name}`;
+    case "field": return e.name === "len" ? (e.obj.t?.k === "map" ? `${x(e.obj)}.size` : `${x(e.obj)}.length`) : `${x(e.obj)}.${e.name}`;
     case "index": return `at(${x(e.obj)}, ${x(e.idx)}, ${pos(e)})`;
     case "call":
       if (e.callee.k === "ident" && BUILTINS[e.callee.name]) { const c = `${BUILTINS[e.callee.name].js}(${e.args.map(x).join(", ")})`; return e.callee.name === "floor" ? `ck(${c}, ${pos(e)})` : e.callee.name === "toInt" || e.callee.name === "strToInt" ? `${e.callee.name}(${e.args.map(x).join(", ")}, ${pos(e)})` : c; }
       return `${x(e.callee)}(${e.args.map(x).join(", ")})`;
     case "method":
       if (e.obj.k === "ident" && e.obj.name === "List" && e.name === "new") return "[]";
+      if (e.obj.k === "ident" && e.obj.name === "Map" && e.name === "new") return "new Map()";
+      if (e.obj.t?.k === "map") {
+        if (e.name === "get") return `mapGet(${x(e.obj)}, ${x(e.args[0])}, ${pos(e)})`;
+        if (e.name === "keys") return `[...${x(e.obj)}.keys()]`;
+        if (e.name === "remove") return `${x(e.obj)}.delete(${x(e.args[0])})`;
+        return `${x(e.obj)}.${e.name}(${e.args.map(x).join(", ")})`;
+      }
       if (e.name === "sortBy") return `${x(e.obj)}.sort(${e.args.map(x).join(", ")})`;
       if (e.obj.t?.k === "prim" && e.obj.t.n === "String" && STRING_METHODS[e.name]) {
         const m = STRING_METHODS[e.name];

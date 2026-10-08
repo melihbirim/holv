@@ -1,0 +1,8 @@
+holv 0
+
+-- expect: run-fail "error":"MissingKey"
+fn main() -> Int {
+  let m: Map<Int, String> = Map.new()
+  m.set(1, "one")
+  m.get(2).len
+}

@@ -1,0 +1,8 @@
+holv 0
+
+-- expect: error E052
+fn f() -> Int {
+  let m: Map<String, Int> = Map.new()
+  m.set("a", "b")
+  0
+}

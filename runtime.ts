@@ -63,6 +63,10 @@ export function strAt(s: string, i: number, at: string): string {
     throw new RuntimeError("IndexOutOfRange", `charAt(${i}) out of range for a String of length ${s.length}`, "guard with 'if i < s.len { ... }'", at);
   return s[i] as string;
 }
+export function mapGet<K, V>(m: Map<K, V>, k: K, at: string): V {
+  if (!m.has(k)) throw new RuntimeError("MissingKey", `Map has no key ${typeof k === "string" ? JSON.stringify(k) : String(k)}`, "guard with 'if m.has(k) { ... }' or set the key first", at);
+  return m.get(k) as V;
+}
 export function setAt<T>(xs: T[], i: number, v: T, at: string): void {
   if (!Number.isInteger(i) || i < 0 || i >= xs.length)
     throw new RuntimeError("IndexOutOfRange", `index ${i} out of range for a List of length ${xs.length}`, `guard the index with 'if i < xs.len { ... }' or push to grow the list; assignment never extends it`, at);

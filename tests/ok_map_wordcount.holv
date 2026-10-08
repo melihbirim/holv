@@ -1,0 +1,27 @@
+holv 0
+
+-- expect: run => the:3 cat:2 sat:1 on:1 mat:1
+cap Out { print(s: String): Unit }
+
+fn count(text: String) -> Map<String, Int> {
+  let m: Map<String, Int> = Map.new()
+  let words = text.split(" ")
+  for i in 0 .. words.len {
+    let w = words[i]
+    if w != "" { if m.has(w) { m.set(w, m.get(w) + 1) } else { m.set(w, 1) } }
+  }
+  m
+}
+
+fn main(out: Out) -> Int
+  effects Out
+{
+  let m = count("the cat sat on the mat the cat")
+  let keys = m.keys()
+  var line = ""
+  for i in 0 .. keys.len {
+    line = line + if i == 0 { "" } else { " " } + keys[i] + ":" + str(m.get(keys[i]))
+  }
+  out.print(line)
+  0
+}

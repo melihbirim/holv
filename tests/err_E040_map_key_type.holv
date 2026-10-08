@@ -1,0 +1,4 @@
+holv 0
+
+-- expect: error E040
+fn f(m: Map<Float, Int>) -> Int { m.len }

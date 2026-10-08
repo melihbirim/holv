@@ -26,6 +26,8 @@ Then Melih asked for the same comparison against Go, Rust, Zig and C. Added the 
 
 **Two measured gaps fixed, under the freeze, as measurement enablers.** `Big`: an exact integer (`big`, `toInt`, arithmetic between Bigs, compiles to `bigint`), because every holv miss in five pilots was arithmetic past 2^53 and every other language had a one-word answer. `xs[i] = v` (#39), because a sieve could not be written. Seven tests. Neither makes holv win; they bring its cost to parity so the next pilot can be about something other than integers.
 
+Then strings (#14: `len`, `slice`, `contains`, `split`, `trim`, `replace`, `charAt`, `strToInt`, `jsonString`) and `Map<K, V>` (#18: `has`, `get`, `set`, `remove`, `keys`, `len`), both as measurement enablers, both with loud failures where JavaScript is silent (`charAt` out of range, a missing key, a non-integer string). 85 conformance files. holv can now express the programs the next pilot needs: a few hundred lines with text, a store, a clock, and one function that must not touch any of them.
+
 What I would not take back: every check caught something real in code I wrote; the error contract and the generated contract are worth having in any language; the harness and the numbers exist and are honest. What I was wrong about: I expected a capable model to make the mistakes the checks catch. It did not, on tasks this size.
 
 ## 2026-10-06, day one
