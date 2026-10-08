@@ -38,22 +38,22 @@ const sh = (cmd, args, cwd) => spawnSync(cmd, args, { encoding: "utf8", env, cwd
 const LANGTAB = {
   holv: { ext: "holv", compile: (f) => sh(process.execPath, [HOLVC, "check", f]), run: (f, a) => sh(process.execPath, [HOLVC, "run", f, ...a]),
     head: () => `You are writing a program in holv, a language you do not know. Its complete specification follows; it is the only source of truth.\n\n${SPEC}\n\n`,
-    io: (t) => `Entry point: fn main(out: Out, ${t.params.map((p) => `${p}: Int`).join(", ")}) -> Int with effects Out, declaring cap Out { print(s: String): Unit }. Print each output line with out.print. Return 0.` },
+    io: (t) => `Entry point: fn main(out: Out, ${t.sig.map((p) => `${p.name}: ${p.type}`).join(", ")}) -> Int with effects Out, declaring cap Out { print(s: String): Unit }. Print each output line with out.print. Return 0.` },
   ts: { ext: "mjs", compile: (f) => sh(process.execPath, ["--check", f]), run: (f, a) => sh(process.execPath, [f, ...a]),
     head: () => "You are writing a program in plain JavaScript for Node 22 (an ES module, no dependencies).\n\n",
-    io: (t) => `Read the integer argument(s) ${t.params.join(", ")} from process.argv.slice(2). Print each output line with console.log.` },
+    io: (t) => `Read the argument(s) ${argList(t)} from process.argv.slice(2), in that order. Print each output line with console.log.` },
   go: { ext: "go", compile: (f) => sh("go", ["build", "-o", path.join(path.dirname(f), "solution"), f], path.dirname(f)), run: (f, a) => sh(path.join(path.dirname(f), "solution"), a),
     head: () => "You are writing a program in Go 1.25 (a single file, package main, standard library only).\n\n",
-    io: (t) => `Read the integer argument(s) ${t.params.join(", ")} from os.Args[1:]. Print each output line with fmt.Println.` },
+    io: (t) => `Read the argument(s) ${argList(t)} from os.Args[1:], in that order. Print each output line with fmt.Println.` },
   rust: { ext: "rs", compile: (f) => sh("rustc", ["-O", "-o", path.join(path.dirname(f), "solution"), f]), run: (f, a) => sh(path.join(path.dirname(f), "solution"), a),
     head: () => "You are writing a program in Rust (a single file compiled with rustc, no crates; it will be built with -O, a release build).\n\n",
-    io: (t) => `Read the integer argument(s) ${t.params.join(", ")} from std::env::args(). Print each output line with println!.` },
+    io: (t) => `Read the argument(s) ${argList(t)} from std::env::args(), in that order. Print each output line with println!.` },
   zig: { ext: "zig", compile: (f) => sh("zig", ["build-exe", f, "-O", "ReleaseSafe", `-femit-bin=${path.join(path.dirname(f), "solution")}`], path.dirname(f)), run: (f, a) => sh(path.join(path.dirname(f), "solution"), a),
     head: () => "You are writing a program in Zig 0.15.2 (a single file, standard library only; it will be built with -O ReleaseSafe). Note that in Zig 0.15 the standard writer API changed: stdout is `var buf: [1024]u8 = undefined; var w = std.fs.File.stdout().writer(&buf); const out = &w.interface;` then `try out.print(...)` and `try out.flush()` at the end.\n\n",
-    io: (t) => `Read the integer argument(s) ${t.params.join(", ")} from std.process.argsAlloc. Print each output line to stdout.` },
+    io: (t) => `Read the argument(s) ${argList(t)} from std.process.argsAlloc, in that order. Print each output line to stdout.` },
   c: { ext: "c", compile: (f) => sh("cc", ["-O2", "-o", path.join(path.dirname(f), "solution"), f]), run: (f, a) => sh(path.join(path.dirname(f), "solution"), a),
     head: () => "You are writing a program in C (C11, a single file, standard library only; it will be built with cc -O2).\n\n",
-    io: (t) => `Read the integer argument(s) ${t.params.join(", ")} from argv. Print each output line with printf and a trailing newline.` },
+    io: (t) => `Read the argument(s) ${argList(t)} from argv, in that order. Print each output line with printf and a trailing newline.` },
 };
 function runProgram(lang, file, args) {
   const r = LANGTAB[lang].run(file, args);
@@ -71,8 +71,9 @@ function verify(lang, file, task) {
   if (vis.stdout !== task.visible.stdout.trim()) return { stage: "visible_wrong", report: `for input ${task.visible.args.join(" ")} expected:\n${task.visible.stdout.trim()}\ngot:\n${vis.stdout}` };
   for (const c of task.hidden) {
     const r = runProgram(lang, file, c.args.map(String));
-    if (!r.ok) return { stage: "hidden_crash", report: `the program failed for input ${c.args.join(" ")}:\n${r.stderr.split("\n").slice(0, 3).join("\n")}` };
-    if (r.stdout !== c.stdout.trim()) return { stage: "hidden_wrong", report: `a hidden case failed for input ${c.args.join(" ")}` };
+    const shown = c.args.map((v) => (typeof v === "string" ? JSON.stringify(v) : String(v))).join(" ");
+    if (!r.ok) return { stage: "hidden_crash", report: `the program failed for input ${shown}:\n${r.stderr.split("\n").slice(0, 3).join("\n")}` };
+    if (r.stdout !== c.stdout.trim()) return { stage: "hidden_wrong", report: `a hidden case failed for input ${shown}` };
   }
   return null;
 }
@@ -80,10 +81,12 @@ function prompt(lang, task, file, feedback) {
   const head = LANGTAB[lang].head();
   const io = `Write the complete program to the file ${file}. ${LANGTAB[lang].io(task)}`;
   const fb = feedback ? `\n\nYour previous attempt was checked. Result:\n${feedback}\n\nRewrite the whole file.` : "";
-  return `${head}# Task\n${task.text.trim()}\n\n# Visible example\ninput: ${task.visible.args.join(" ")}\noutput:\n${task.visible.stdout.trim()}\n\n# Output\n${io} Write only the file; do not explain.${fb}\n`;
+  const showArgs = (a) => a.map((v) => (typeof v === "string" ? JSON.stringify(v) : String(v))).join(" ");
+  return `${head}# Task\n${task.text.trim()}\n\n# Visible example\ninput: ${showArgs(task.visible.args)}\noutput:\n${task.visible.stdout.trim()}\n\n# Output\n${io} Write only the file; do not explain.${fb}\n`;
 }
 
-const loadTask = (name) => { const t = JSON.parse(fs.readFileSync(path.join(HERE, "tasks", name, "task.json"), "utf8")); t.text = fs.readFileSync(path.join(HERE, "tasks", name, "task.md"), "utf8"); return t; };
+const loadTask = (name) => { const t = JSON.parse(fs.readFileSync(path.join(HERE, "tasks", name, "task.json"), "utf8")); t.text = fs.readFileSync(path.join(HERE, "tasks", name, "task.md"), "utf8"); t.sig = t.params.map((p) => { const [n, ty] = p.split(":"); return { name: n, type: ty ?? "Int" }; }); return t; };
+const argList = (t) => t.sig.map((p) => `${p.name} (${p.type === "String" ? "a string" : "an integer"})`).join(", ");
 const cell = (name, lang) => { const work = path.join(HERE, "work", name, lang); fs.mkdirSync(work, { recursive: true }); return { work, file: path.join(work, `solution.${LANGTAB[lang].ext}`), state: path.join(work, "state.json") }; };
 const finish = (row) => { row.first_try = row.stages[0] === "pass"; row.compile_failures = row.stages.filter((s) => s === "compile").length; row.silent_wrong = !row.passed && row.stages[row.stages.length - 1] === "hidden_wrong"; return row; };
 function table(rows, out) {
@@ -98,6 +101,8 @@ function table(rows, out) {
     ["mean attempts", (xs) => (sum(xs, (r) => r.attempts) / xs.length).toFixed(2)],
     ["compile failures", (xs) => sum(xs, (r) => r.compile_failures)],
     ["silent wrong (final)", (xs) => sum(xs, (r) => r.silent_wrong ? 1 : 0)],
+    ["first attempt: silent wrong", (xs) => sum(xs, (r) => r.stages[0] === "hidden_wrong" || r.stages[0] === "visible_wrong" ? 1 : 0)],
+    ["first attempt: loud failure", (xs) => sum(xs, (r) => ["hidden_crash", "visible_crash", "compile"].includes(r.stages[0]) ? 1 : 0)],
     ["agent seconds", (xs) => (sum(xs, (r) => r.agent_ms) / 1000).toFixed(0)],
   ]) console.log(`${label.padEnd(28)}${LANGS.map((l) => String(col(l, f)).padStart(8)).join("")}`);
   console.log(`\nresults: ${path.relative(ROOT, out)}`);
@@ -140,8 +145,7 @@ fs.mkdirSync(path.join(HERE, "results"), { recursive: true });
 const out = path.join(HERE, "results", `${new Date().toISOString().replace(/[:.]/g, "-")}.jsonl`);
 const rows = [];
 for (const name of TASKS) {
-  const task = JSON.parse(fs.readFileSync(path.join(HERE, "tasks", name, "task.json"), "utf8"));
-  task.text = fs.readFileSync(path.join(HERE, "tasks", name, "task.md"), "utf8");
+  const task = loadTask(name);
   for (const lang of LANGS) {
     const work = path.join(HERE, "work", name, lang);
     fs.rmSync(work, { recursive: true, force: true }); fs.mkdirSync(work, { recursive: true });

@@ -7,7 +7,8 @@ Milestone 2 of the README: does an agent reach a correct program in fewer attemp
 - `tasks/<name>/task.md` is the task, identical for both languages. `task.json` has the integer parameters, one visible example, and hidden cases chosen to include the edges people get wrong (0, 1, boundaries).
 - The agent gets: the task, the visible example, where to write the file, and for holv the full `holvc spec` output and nothing else. No holv examples, no AGENTS.md. For TypeScript it gets no spec: the model already knows JavaScript.
 - Up to five attempts. After a failure the agent sees compile errors verbatim, a crash's first lines, or a visible-case diff. For a hidden failure it sees only the input, never the expected output.
-- Recorded per task and language: attempts, pass, first-try pass, compile failures, silent-wrong (the final attempt passes the visible example and fails a hidden case), agent wall time.
+- Recorded per task and language: attempts, pass, first-try pass, compile failures, silent-wrong (the final attempt passes the visible example and fails a hidden case), agent wall time. The table also splits the *first* attempt into silent wrong (a plausible wrong answer) and loud failure (a compile error, a crash, a positioned runtime stop): with `--max 1` that split is the production-shaped number, since shipped code gets no retry.
+- `task.json` params are `"n"` for an integer or `"log:String"` for a string argument.
 - Same model, same temperature, same max attempts for both languages. Run both orders (ts first, holv first) if the model has any session memory; the runner has none.
 
 ## Run

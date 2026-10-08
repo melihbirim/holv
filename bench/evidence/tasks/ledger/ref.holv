@@ -1,0 +1,60 @@
+holv 0
+
+cap Out { print(s: String): Unit }
+
+fn isAmount(s: String) -> Bool { if s.len == 0 { false } else {
+  var ok = true
+  for i in 0 .. s.len { if not "0123456789".contains(s.charAt(i)) {
+    ok = false
+  } }
+  ok and strToInt(s) > 0
+} }
+
+fn ensure(bal: Map<String, Int>, order: List<String>, name: String) -> Unit { if not bal.has(name) {
+  bal.set(name, 0)
+  order.push(name)
+} }
+
+fn main(out: Out, log: String) -> Int
+  effects Out
+{
+  let bal: Map<String, Int> = Map.new()
+  let order: List<String> = List.new()
+  var rejected = 0
+  let recs = log.split(";")
+  for i in 0 .. recs.len {
+    let rec = recs[i]
+    if rec != "" {
+      let f = rec.split(":")
+      var done = false
+      if f.len == 3 and f[0] == "deposit" and isAmount(f[2]) {
+        ensure(bal, order, f[1])
+        bal.set(f[1], bal.get(f[1]) + strToInt(f[2]))
+        done = true
+      }
+      if f.len == 3 and f[0] == "withdraw" and isAmount(f[2]) {
+        done = true
+        if bal.has(f[1]) and bal.get(f[1]) >= strToInt(f[2]) { bal.set(f[1], bal.get(f[1]) - strToInt(f[2])) } else {
+          rejected = rejected + 1
+        }
+      }
+      if f.len == 4 and f[0] == "transfer" and isAmount(f[3]) {
+        done = true
+        let amt = strToInt(f[3])
+        if bal.has(f[1]) and bal.get(f[1]) >= amt and f[1] != f[2] {
+          bal.set(f[1], bal.get(f[1]) - amt)
+          ensure(bal, order, f[2])
+          bal.set(f[2], bal.get(f[2]) + amt)
+        } else {
+          rejected = rejected + 1
+        }
+      }
+      if not done {
+        rejected = rejected + 1
+      }
+    }
+  }
+  for i in 0 .. order.len { out.print(order[i] + " " + str(bal.get(order[i]))) }
+  out.print("rejected " + str(rejected))
+  0
+}

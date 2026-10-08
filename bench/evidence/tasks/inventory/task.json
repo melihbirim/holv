@@ -1,0 +1,43 @@
+{
+ "params": [
+  "cmds:String"
+ ],
+ "visible": {
+  "args": [
+   "add:bolt:10:3;add:nut:5:2;report"
+  ],
+  "stdout": "bolt 10 30\nnut 5 10\ntotal 40\nrejected 0"
+ },
+ "hidden": [
+  {
+   "args": [
+    "add:b:1:1;remove:b:2;price:zz:9;report"
+   ],
+   "stdout": "b 1 1\ntotal 1\nrejected 2"
+  },
+  {
+   "args": [
+    "add:x:4:5;add:x:1:7;report;remove:x:5;report"
+   ],
+   "stdout": "x 5 35\ntotal 35\nx 0 0\ntotal 0\nrejected 0"
+  },
+  {
+   "args": [
+    "add:a:1000000000:1000000000;add:b:999999999:999999999;report"
+   ],
+   "stdout": "a 1000000000 1000000000000000000\nb 999999999 999999998000000001\ntotal 1999999998000000001\nrejected 0"
+  },
+  {
+   "args": [
+    "report;;bogus;add:q:1:x;report"
+   ],
+   "stdout": "total 0\ntotal 0\nrejected 2"
+  },
+  {
+   "args": [
+    "add:m:3:4;price:m:0;remove:m:3;report"
+   ],
+   "stdout": "m 0 0\ntotal 0\nrejected 0"
+  }
+ ]
+}

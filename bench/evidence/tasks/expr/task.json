@@ -1,0 +1,67 @@
+{
+ "params": [
+  "src:String"
+ ],
+ "visible": {
+  "args": [
+   "2 + 3 * 4"
+  ],
+  "stdout": "14"
+ },
+ "hidden": [
+  {
+   "args": [
+    "(2+3)*4"
+   ],
+   "stdout": "20"
+  },
+  {
+   "args": [
+    "-(3-5)*2"
+   ],
+   "stdout": "4"
+  },
+  {
+   "args": [
+    "-7/2 + 100"
+   ],
+   "stdout": "97"
+  },
+  {
+   "args": [
+    "1/(3-3)"
+   ],
+   "stdout": "error"
+  },
+  {
+   "args": [
+    "2+"
+   ],
+   "stdout": "error"
+  },
+  {
+   "args": [
+    "((1)"
+   ],
+   "stdout": "error"
+  },
+  {
+   "args": [
+    "  12 * (3 + 4) - 5 "
+   ],
+   "stdout": "79"
+  },
+  {
+   "args": [
+    "8/3/2"
+   ],
+   "stdout": "1"
+  },
+  {
+   "args": [
+    "2 3"
+   ],
+   "stdout": "error"
+  }
+ ]
+}

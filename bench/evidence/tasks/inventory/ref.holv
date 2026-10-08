@@ -1,0 +1,67 @@
+holv 0
+
+cap Out { print(s: String): Unit }
+
+fn isDigits(s: String) -> Bool { if s.len == 0 { false } else {
+  var ok = true
+  for i in 0 .. s.len { if not "0123456789".contains(s.charAt(i)) {
+    ok = false
+  } }
+  ok
+} }
+
+fn report(out: Out, stock: Map<String, Int>, price: Map<String, Int>) -> Unit
+  effects Out
+{
+  let skus = stock.keys()
+  skus.sortBy(fn(a, b) { if a < b { -1 } else { if a == b { 0 } else { 1 } } })
+  var total = big(0)
+  for i in 0 .. skus.len {
+    let v = big(stock.get(skus[i])) * big(price.get(skus[i]))
+    total = total + v
+    out.print(skus[i] + " " + str(stock.get(skus[i])) + " " + str(v))
+  }
+  out.print("total " + str(total))
+}
+
+fn main(out: Out, cmds: String) -> Int
+  effects Out
+{
+  let stock: Map<String, Int> = Map.new()
+  let price: Map<String, Int> = Map.new()
+  var rejected = 0
+  let cs = cmds.split(";")
+  for i in 0 .. cs.len {
+    let c = cs[i]
+    if c != "" {
+      let f = c.split(":")
+      var done = false
+      if f.len == 4 and f[0] == "add" and isDigits(f[2]) and isDigits(f[3]) {
+        if stock.has(f[1]) { stock.set(f[1], stock.get(f[1]) + strToInt(f[2])) } else { stock.set(f[1], strToInt(f[2])) }
+        price.set(f[1], strToInt(f[3]))
+        done = true
+      }
+      if f.len == 3 and f[0] == "remove" and isDigits(f[2]) {
+        done = true
+        if stock.has(f[1]) and stock.get(f[1]) >= strToInt(f[2]) { stock.set(f[1], stock.get(f[1]) - strToInt(f[2])) } else {
+          rejected = rejected + 1
+        }
+      }
+      if f.len == 3 and f[0] == "price" and isDigits(f[2]) {
+        done = true
+        if stock.has(f[1]) { price.set(f[1], strToInt(f[2])) } else {
+          rejected = rejected + 1
+        }
+      }
+      if f.len == 1 and f[0] == "report" {
+        done = true
+        report(out, stock, price)
+      }
+      if not done {
+        rejected = rejected + 1
+      }
+    }
+  }
+  out.print("rejected " + str(rejected))
+  0
+}

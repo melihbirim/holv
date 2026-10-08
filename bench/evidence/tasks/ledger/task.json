@@ -1,0 +1,43 @@
+{
+ "params": [
+  "log:String"
+ ],
+ "visible": {
+  "args": [
+   "deposit:alice:100;withdraw:alice:30;deposit:bob:5"
+  ],
+  "stdout": "alice 70\nbob 5\nrejected 0"
+ },
+ "hidden": [
+  {
+   "args": [
+    "deposit:alice:100;withdraw:alice:100;withdraw:alice:1"
+   ],
+   "stdout": "alice 0\nrejected 1"
+  },
+  {
+   "args": [
+    "deposit:a:50;transfer:a:b:50;transfer:b:b:10;transfer:b:c:60"
+   ],
+   "stdout": "a 0\nb 50\nrejected 2"
+  },
+  {
+   "args": [
+    "deposit:x:10;deposit:x:abc;withdraw:y:1;fly:x:1;deposit:x:0;deposit:x:-5"
+   ],
+   "stdout": "x 10\nrejected 5"
+  },
+  {
+   "args": [
+    ""
+   ],
+   "stdout": "rejected 0"
+  },
+  {
+   "args": [
+    "deposit:a:7;;transfer:a:b:3;withdraw:b:3;withdraw:b:1;deposit:c:1:2"
+   ],
+   "stdout": "a 4\nb 0\nrejected 2"
+  }
+ ]
+}
