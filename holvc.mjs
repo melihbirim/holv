@@ -756,13 +756,51 @@ function fixFile(file) {
 }
 
 
+// ---- caps verify -------------------------------------------------------------------------------------------
+// Checks every caps/<name>/ entry against its manifest. Importing caps.ts runs the wrapper (and the package), in a child process.
+function capsVerify() {
+  const dir = path.join(HERE, "caps"), errors = [];
+  const bad = (entry, msg, fix) => errors.push({ entry, code: "C001", msg, fix: { do: fix } });
+  for (const name of fs.readdirSync(dir).filter((n) => fs.statSync(path.join(dir, n)).isDirectory()).sort()) {
+    const d = path.join(dir, name), rd = (f) => fs.readFileSync(path.join(d, f), "utf8");
+    let m; try { m = JSON.parse(rd("CAP.json")); } catch (e) { bad(name, `CAP.json: ${e.message}`, "add a valid CAP.json; see caps/README.md"); continue; }
+    if (m.package === undefined || typeof m.version !== "string") { bad(name, "CAP.json lacks package or version", "set package and an exact version in CAP.json"); continue; }
+    const pj = JSON.parse(rd("package.json"));
+    if (pj.dependencies?.[m.package] !== m.version) bad(name, `CAP.json.version ${m.version} differs from package.json (${pj.dependencies?.[m.package]})`, "make CAP.json.version and package.json agree on one exact version");
+    const esc = m.package.replace(/[.*+?^${}()|[\]\\\/]/g, "\\$&");
+    const lock = rd("pnpm-lock.yaml").match(new RegExp(`^  '?${esc}@${m.version.replace(/\./g, "\\.")}'?:\\n    resolution: \\{integrity: (\\S+?)[,}]`, "m"));
+    if (!lock) bad(name, `pnpm-lock.yaml has no entry for ${m.package}@${m.version}`, "run pnpm install in the entry directory so the lockfile pins this version");
+    else if (lock[1] !== m.integrity) bad(name, `CAP.json.integrity differs from pnpm-lock.yaml (${lock[1]})`, "copy the integrity from pnpm-lock.yaml into CAP.json; a human reviews this change");
+    if (!fs.existsSync(path.join(d, "node_modules"))) { bad(name, "node_modules missing, cannot load caps.ts", `run: pnpm install --frozen-lockfile --dir caps/${name}`); continue; }
+    const probe = `const m = await import(${JSON.stringify(path.join(d, "caps.ts"))}); const c = m.default ?? {};
+      const out = { exports: Object.keys(m), caps: {} };
+      for (const [k, v] of Object.entries(c)) { const r = v.real(), y = v.dry(); out.caps[k] = { real: Object.keys(r).sort(), dry: Object.keys(y).sort(), same: Object.keys(r).filter((x) => r[x] === y[x]) }; }
+      console.log(JSON.stringify(out));`;
+    const r = spawnSync(process.execPath, ["--experimental-strip-types", "--no-warnings", "--input-type=module", "-e", probe], { encoding: "utf8" });
+    if (r.status !== 0) { bad(name, `caps.ts does not load: ${r.stderr.trim().split("\n")[0]}`, "make caps.ts import cleanly; see caps/README.md"); continue; }
+    const got = JSON.parse(r.stdout), want = [...(m.methods ?? [])].sort(), c = got.caps[m.cap];
+    if (got.exports.join() !== "default") bad(name, `caps.ts exports ${got.exports.join(", ")}`, "export only the default registry from caps.ts");
+    if (Object.keys(got.caps).join() !== String(m.cap)) bad(name, `caps.ts registers ${Object.keys(got.caps).join(", ")}, manifest says ${m.cap}`, "register exactly the manifest's cap in caps.ts");
+    else {
+      if (c.real.join() !== want.join()) bad(name, `real() exposes ${c.real.join(", ")}, manifest lists ${want.join(", ")}`, "make real() expose exactly the methods in CAP.json");
+      if (c.dry.join() !== want.join()) bad(name, `dry() exposes ${c.dry.join(", ")}, manifest lists ${want.join(", ")}`, "make dry() expose exactly the methods in CAP.json");
+      if (m.pure === false && c.same.length) bad(name, `pure: false but dry() shares ${c.same.join(", ")} with real()`, "give dry() a stub that does not call the package, or set pure: true after review");
+    }
+  }
+  for (const e of errors) console.error(JSON.stringify(e));
+  console.log(JSON.stringify({ ok: errors.length === 0, entries: fs.readdirSync(dir).filter((n) => fs.statSync(path.join(dir, n)).isDirectory()).length, errors: errors.length }));
+  return errors.length === 0;
+}
+
+
 const [, , cmd, file, ...rawRest] = process.argv;
 const flag = (name) => { const i = rawRest.indexOf(name); return i >= 0 ? rawRest[i + 1] : undefined; };
 const capsOpt = flag("--caps"), targetOpt = flag("--target");
 const rest = rawRest.filter((a, i) => !(["--caps", "--target"].includes(a) || ["--caps", "--target"].includes(rawRest[i - 1])));
-const usage = "usage: holvc check|build|run|test|contract <file.holv> [args] [--caps file.ts] [--target ts] [--simulate] | holvc fmt <file.holv> [--write|--check] | holvc fix <file.holv> | holvc spec";
+const usage = "usage: holvc check|build|run|test|contract <file.holv> [args] [--caps file.ts] [--target ts] [--simulate] | holvc fmt <file.holv> [--write|--check] | holvc fix <file.holv> | holvc caps verify | holvc spec";
 try {
   if (cmd === "spec") process.stdout.write(fs.readFileSync(path.join(HERE, "spec.md"), "utf8"));
+  else if (cmd === "caps" && file === "verify") { if (!capsVerify()) process.exit(1); }
   else if (!file) { console.error(usage); process.exit(2); }
   else if (cmd === "check") { const { items, errors } = compile(file); if (!report(file, errors)) process.exit(1); console.log(JSON.stringify({ ok: true, file, fns: items.filter((i) => i.k === "fn").length })); }
   else if (cmd === "fix") {
