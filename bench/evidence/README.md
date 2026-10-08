@@ -31,6 +31,18 @@ The number that matters is silent-wrong: a program that looks right and is not. 
 
 Known biases, stated: the tasks are small and integer-only because holv 0 has no strings beyond `+` and no `Map`; that favours neither language but limits generality. The holv prompt is longer (the spec), which costs the model context. Six tasks is a pilot, not a study; add tasks before trusting a margin smaller than two.
 
+## Six languages on the six trap tasks (2026-10-08)
+
+Same six tasks (the four traps and the two untelegraphed overflow tasks), Haiku 4.5 as subagents, max five attempts, one hidden case on `mulmod_plain` with inputs past int64 so that 64-bit languages could be silently wrong (`results-published/*-four-langs-subagent-haiku.jsonl` plus the earlier TS and holv rows):
+
+| | TS | Go | Rust | Zig | C | holv |
+|---|---|---|---|---|---|---|
+| correct in the end | 6/6 | 6/6 | 6/6 | 6/6 | 6/6 | 6/6 |
+| first-try pass | 6 | 6 | 6 | 6 | 6 | 5 |
+| silent wrong, final | 0 | 0 | 0 | 0 | 0 | 0 |
+
+Haiku anticipated overflow in every language without being told the bounds: `BigInt` in JavaScript, `math/big` in Go, `i128` in Rust, `u128` in Zig, double-and-add in C with `unsigned long long`. Zig 0.15, whose writer API the model does not know from training (the prompt gave it the three lines), still went 6/6. holv is the only language that cost a second attempt, on the one program where the agent wrote the naive product and holv's checked Int stopped it. Conclusion unchanged and now stronger: on tasks of this size, a capable model does not make the mistakes holv's checks catch, in any of six languages.
+
 ## Verdict after four pilots (2026-10-08)
 
 18 task-cells per language, claude-haiku-4-5, max five attempts:

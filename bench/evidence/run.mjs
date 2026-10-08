@@ -31,16 +31,37 @@ const TASKS = opt("--tasks", fs.readdirSync(path.join(HERE, "tasks")).sort().joi
 const SPEC = spawnSync(process.execPath, [HOLVC, "spec"], { encoding: "utf8" }).stdout;
 const env = { ...process.env, HOLV_NOW: "1700000000", HOLV_SEED: "42" };
 
+// Language table: file extension, how to compile (null = nothing to compile), how to run, and the prompt head.
+// Compiled languages run the binary next to the source. Zig uses ReleaseSafe on purpose: that is the build the
+// language recommends, and its overflow behaviour (trap) is part of what is being measured.
+const sh = (cmd, args, cwd) => spawnSync(cmd, args, { encoding: "utf8", env, cwd, timeout: 120000 });
+const LANGTAB = {
+  holv: { ext: "holv", compile: (f) => sh(process.execPath, [HOLVC, "check", f]), run: (f, a) => sh(process.execPath, [HOLVC, "run", f, ...a]),
+    head: () => `You are writing a program in holv, a language you do not know. Its complete specification follows; it is the only source of truth.\n\n${SPEC}\n\n`,
+    io: (t) => `Entry point: fn main(out: Out, ${t.params.map((p) => `${p}: Int`).join(", ")}) -> Int with effects Out, declaring cap Out { print(s: String): Unit }. Print each output line with out.print. Return 0.` },
+  ts: { ext: "mjs", compile: (f) => sh(process.execPath, ["--check", f]), run: (f, a) => sh(process.execPath, [f, ...a]),
+    head: () => "You are writing a program in plain JavaScript for Node 22 (an ES module, no dependencies).\n\n",
+    io: (t) => `Read the integer argument(s) ${t.params.join(", ")} from process.argv.slice(2). Print each output line with console.log.` },
+  go: { ext: "go", compile: (f) => sh("go", ["build", "-o", path.join(path.dirname(f), "solution"), f], path.dirname(f)), run: (f, a) => sh(path.join(path.dirname(f), "solution"), a),
+    head: () => "You are writing a program in Go 1.25 (a single file, package main, standard library only).\n\n",
+    io: (t) => `Read the integer argument(s) ${t.params.join(", ")} from os.Args[1:]. Print each output line with fmt.Println.` },
+  rust: { ext: "rs", compile: (f) => sh("rustc", ["-O", "-o", path.join(path.dirname(f), "solution"), f]), run: (f, a) => sh(path.join(path.dirname(f), "solution"), a),
+    head: () => "You are writing a program in Rust (a single file compiled with rustc, no crates; it will be built with -O, a release build).\n\n",
+    io: (t) => `Read the integer argument(s) ${t.params.join(", ")} from std::env::args(). Print each output line with println!.` },
+  zig: { ext: "zig", compile: (f) => sh("zig", ["build-exe", f, "-O", "ReleaseSafe", `-femit-bin=${path.join(path.dirname(f), "solution")}`], path.dirname(f)), run: (f, a) => sh(path.join(path.dirname(f), "solution"), a),
+    head: () => "You are writing a program in Zig 0.15.2 (a single file, standard library only; it will be built with -O ReleaseSafe). Note that in Zig 0.15 the standard writer API changed: stdout is `var buf: [1024]u8 = undefined; var w = std.fs.File.stdout().writer(&buf); const out = &w.interface;` then `try out.print(...)` and `try out.flush()` at the end.\n\n",
+    io: (t) => `Read the integer argument(s) ${t.params.join(", ")} from std.process.argsAlloc. Print each output line to stdout.` },
+  c: { ext: "c", compile: (f) => sh("cc", ["-O2", "-o", path.join(path.dirname(f), "solution"), f]), run: (f, a) => sh(path.join(path.dirname(f), "solution"), a),
+    head: () => "You are writing a program in C (C11, a single file, standard library only; it will be built with cc -O2).\n\n",
+    io: (t) => `Read the integer argument(s) ${t.params.join(", ")} from argv. Print each output line with printf and a trailing newline.` },
+};
 function runProgram(lang, file, args) {
-  const r = lang === "holv"
-    ? spawnSync(process.execPath, [HOLVC, "run", file, ...args], { encoding: "utf8", env, timeout: 20000 })
-    : spawnSync(process.execPath, [file, ...args], { encoding: "utf8", env, timeout: 20000 });
+  const r = LANGTAB[lang].run(file, args);
   return { ok: r.status === 0, stdout: (r.stdout ?? "").trim(), stderr: (r.stderr ?? "").trim() };
 }
 function compileCheck(lang, file) {
-  if (lang === "holv") { const r = spawnSync(process.execPath, [HOLVC, "check", file], { encoding: "utf8" }); return r.status === 0 ? null : r.stderr.trim(); }
-  const r = spawnSync(process.execPath, ["--check", file], { encoding: "utf8" });
-  return r.status === 0 ? null : r.stderr.trim();
+  const r = LANGTAB[lang].compile(file);
+  return r.status === 0 ? null : ((r.stderr ?? "") + (r.stdout ?? "")).trim().slice(0, 3000);
 }
 function verify(lang, file, task) {
   const compile = compileCheck(lang, file);
@@ -56,18 +77,14 @@ function verify(lang, file, task) {
   return null;
 }
 function prompt(lang, task, file, feedback) {
-  const head = lang === "holv"
-    ? `You are writing a program in holv, a language you do not know. Its complete specification follows; it is the only source of truth.\n\n${SPEC}\n\n`
-    : `You are writing a program in plain JavaScript for Node 22 (an ES module, no dependencies).\n\n`;
-  const io = lang === "holv"
-    ? `Write the complete program to the file ${file}. Entry point: fn main(out: Out, ${task.params.map((p) => `${p}: Int`).join(", ")}) -> Int with effects Out, declaring cap Out { print(s: String): Unit }. Print each output line with out.print. Return 0.`
-    : `Write the complete program to the file ${file}. Read the integer argument(s) ${task.params.join(", ")} from process.argv.slice(2). Print each output line with console.log.`;
+  const head = LANGTAB[lang].head();
+  const io = `Write the complete program to the file ${file}. ${LANGTAB[lang].io(task)}`;
   const fb = feedback ? `\n\nYour previous attempt was checked. Result:\n${feedback}\n\nRewrite the whole file.` : "";
   return `${head}# Task\n${task.text.trim()}\n\n# Visible example\ninput: ${task.visible.args.join(" ")}\noutput:\n${task.visible.stdout.trim()}\n\n# Output\n${io} Write only the file; do not explain.${fb}\n`;
 }
 
 const loadTask = (name) => { const t = JSON.parse(fs.readFileSync(path.join(HERE, "tasks", name, "task.json"), "utf8")); t.text = fs.readFileSync(path.join(HERE, "tasks", name, "task.md"), "utf8"); return t; };
-const cell = (name, lang) => { const work = path.join(HERE, "work", name, lang); fs.mkdirSync(work, { recursive: true }); return { work, file: path.join(work, lang === "holv" ? "solution.holv" : "solution.mjs"), state: path.join(work, "state.json") }; };
+const cell = (name, lang) => { const work = path.join(HERE, "work", name, lang); fs.mkdirSync(work, { recursive: true }); return { work, file: path.join(work, `solution.${LANGTAB[lang].ext}`), state: path.join(work, "state.json") }; };
 const finish = (row) => { row.first_try = row.stages[0] === "pass"; row.compile_failures = row.stages.filter((s) => s === "compile").length; row.silent_wrong = !row.passed && row.stages[row.stages.length - 1] === "hidden_wrong"; return row; };
 function table(rows, out) {
   const by = (lang) => rows.filter((r) => r.lang === lang);
@@ -128,7 +145,7 @@ for (const name of TASKS) {
   for (const lang of LANGS) {
     const work = path.join(HERE, "work", name, lang);
     fs.rmSync(work, { recursive: true, force: true }); fs.mkdirSync(work, { recursive: true });
-    const file = path.join(work, lang === "holv" ? "solution.holv" : "solution.mjs");
+    const file = path.join(work, `solution.${LANGTAB[lang].ext}`);
     const row = { task: name, lang, attempts: 0, passed: false, stages: [], feedback: [], agent_ms: 0 };
     let feedback = null;
     for (let i = 1; i <= MAX; i++) {

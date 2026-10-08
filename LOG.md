@@ -22,6 +22,8 @@ Decision: no new language features until a benefit is shown. The next build is t
 
 Repeated the six original tasks once more, holv only, through subagents: 6/6 first try, zero compile errors. The morning's seven compile errors never reproduced; they belonged to the `claude -p` wrapper. Cost figure revised down; verdict unchanged, because the benefit side is still zero.
 
+Then Melih asked for the same comparison against Go, Rust, Zig and C. Added the four to the harness, one past-int64 hidden case so 64-bit languages could be silently wrong, 24 cells. 24/24 first try. Haiku used `math/big`, `i128`, `u128`, and a double-and-add in C, unprompted. holv was the only language of six that needed a second attempt. The claim is not just unsupported against TypeScript; it is unsupported against everything, at this task size, with this model.
+
 What I would not take back: every check caught something real in code I wrote; the error contract and the generated contract are worth having in any language; the harness and the numbers exist and are honest. What I was wrong about: I expected a capable model to make the mistakes the checks catch. It did not, on tasks this size.
 
 ## 2026-10-06, day one
