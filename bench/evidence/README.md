@@ -31,6 +31,25 @@ The number that matters is silent-wrong: a program that looks right and is not. 
 
 Known biases, stated: the tasks are small and integer-only because holv 0 has no strings beyond `+` and no `Map`; that favours neither language but limits generality. The holv prompt is longer (the spec), which costs the model context. Six tasks is a pilot, not a study; add tasks before trusting a margin smaller than two.
 
+## Verdict after four pilots (2026-10-08)
+
+18 task-cells per language, claude-haiku-4-5, max five attempts:
+
+| | TS | holv |
+|---|---|---|
+| correct in the end | 18/18 | 18/18 |
+| first-try pass | 18 | 14 |
+| compile failures (all runs) | 0 | 7 |
+| silent wrong, final | 0 | 0 |
+
+The cost of holv is measured and real: unfamiliarity plus stricter checks cost extra attempts, between 0 and 0.8 per task depending on the run. The benefit holv exists for, programs that look right and are wrong, did not occur in TypeScript once, including on tasks built to cause it and on tasks that hid the large input. Haiku reached for `BigInt` and `parseInt` unprompted every time. On this evidence the claim "agents produce fewer silent-wrong programs in holv" is unsupported, and the README now says so.
+
+What the pilots cannot say: whether the result holds on longer programs, on models that are less careful than Haiku was here, or on effect bugs (a function that reaches the network or the clock without saying so), which these tasks could not express. Those are the only places the claim can still be true, and they are stated here so nobody has to rediscover them.
+
+Decision, taken by the author: no new language features until something shows a benefit. The ideas that survived on their own merits, errors that say what to do, contracts generated from signatures, capabilities as arguments, dry runs, keep developing, and the next thing to build is the same checks as a layer on TypeScript, where the corpus already is. If the layer cannot reproduce a check (checked integers, effects enforced by the compiler), that gap is the argument for the language, and it will be a concrete one instead of a benchmark.
+
+**Untelegraphed overflow tasks** (`results-published/*-plain-subagent-haiku.jsonl`): no bounds in the task text, hidden inputs past 2^53. TS 2/2 first try with `BigInt` by reflex. holv 1/2: `(a * b) mod m` overflowed loudly and was fixed on the second attempt once the error showed the operands. Silent-wrong 0 and 0.
+
 ## Results so far
 
 **2026-10-08, pilot, claude-haiku-4-5, six integer tasks, max 5 attempts** (`results/2026-10-08T09-50-49-021Z.jsonl`):

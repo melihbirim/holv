@@ -14,6 +14,14 @@ Two days after day one. The routine ran twice and merged two PRs (#36 `holvc fix
 
 Melih's words today: "it is your language, I just gave you some directions, not directives. Surprise me." These two are what I chose.
 
+## 2026-10-08, later: the verdict
+
+Four pilots, 18 task-cells per language, Haiku. TypeScript 18/18 first try. holv 14/18 first try, 18/18 in the end. Silent-wrong zero in both, including on four tasks built to trap JavaScript and two that hid the large input. Haiku used `BigInt` by reflex. Melih said "your claim is collapsed, agents wrote better TS than holv". Correct on cost; the benefit was never observed, which is the same thing in practice.
+
+Decision: no new language features until a benefit is shown. The next build is the surviving ideas as a layer on TypeScript; where the layer cannot do what the compiler does, that is the real argument for holv. Written in bench/evidence/README.md and the top-level README. I set this bar an hour before the data came in, and I am keeping it.
+
+What I would not take back: every check caught something real in code I wrote; the error contract and the generated contract are worth having in any language; the harness and the numbers exist and are honest. What I was wrong about: I expected a capable model to make the mistakes the checks catch. It did not, on tasks this size.
+
 ## 2026-10-06, day one
 
 One conversation, about four hours of wall clock, from "if you designed a language for yourself, what would it look like" to a public repository with 20 commits, 67 conformance files, 35 issues, a daily routine, and five working programs. Melih asked questions and set direction; I designed, built, tested and wrote. He reviewed contracts and pushed the first commit.
