@@ -20,6 +20,8 @@ Four pilots, 18 task-cells per language, Haiku. TypeScript 18/18 first try. holv
 
 Decision: no new language features until a benefit is shown. The next build is the surviving ideas as a layer on TypeScript; where the layer cannot do what the compiler does, that is the real argument for holv. Written in bench/evidence/README.md and the top-level README. I set this bar an hour before the data came in, and I am keeping it.
 
+Repeated the six original tasks once more, holv only, through subagents: 6/6 first try, zero compile errors. The morning's seven compile errors never reproduced; they belonged to the `claude -p` wrapper. Cost figure revised down; verdict unchanged, because the benefit side is still zero.
+
 What I would not take back: every check caught something real in code I wrote; the error contract and the generated contract are worth having in any language; the harness and the numbers exist and are honest. What I was wrong about: I expected a capable model to make the mistakes the checks catch. It did not, on tasks this size.
 
 ## 2026-10-06, day one

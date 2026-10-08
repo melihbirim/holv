@@ -37,12 +37,12 @@ Known biases, stated: the tasks are small and integer-only because holv 0 has no
 
 | | TS | holv |
 |---|---|---|
-| correct in the end | 18/18 | 18/18 |
-| first-try pass | 18 | 14 |
-| compile failures (all runs) | 0 | 7 |
+| correct in the end | 18/18 | 24/24 |
+| first-try pass | 18 | 20 |
+| compile failures (all runs) | 0 | 7, all in the one `claude -p` run |
 | silent wrong, final | 0 | 0 |
 
-The cost of holv is measured and real: unfamiliarity plus stricter checks cost extra attempts, between 0 and 0.8 per task depending on the run. The benefit holv exists for, programs that look right and are wrong, did not occur in TypeScript once, including on tasks built to cause it and on tasks that hid the large input. Haiku reached for `BigInt` and `parseInt` unprompted every time. On this evidence the claim "agents produce fewer silent-wrong programs in holv" is unsupported, and the README now says so.
+The cost of holv is measured and real but smaller than the first run suggested: in three subagent runs of the six original tasks holv was 17/18 first-try with zero compile errors; the seven compile errors came from the one `claude -p` run and did not reproduce (`results-published/*-repeat-holv-subagent-haiku.jsonl`). Treat the wrapper as a variable. The remaining holv misses were all one kind: an Int overflow in a value the program never used, which TypeScript would have rounded silently and which holv's check reports. The benefit holv exists for, programs that look right and are wrong, did not occur in TypeScript once, including on tasks built to cause it and on tasks that hid the large input. Haiku reached for `BigInt` and `parseInt` unprompted every time. On this evidence the claim "agents produce fewer silent-wrong programs in holv" is unsupported, and the README now says so.
 
 What the pilots cannot say: whether the result holds on longer programs, on models that are less careful than Haiku was here, or on effect bugs (a function that reaches the network or the clock without saying so), which these tasks could not express. Those are the only places the claim can still be true, and they are stated here so nobody has to rediscover them.
 
