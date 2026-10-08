@@ -1,0 +1,20 @@
+holv 0
+
+cap Out { print(s: String): Unit }
+
+fn main(out: Out, n: Int) -> Int
+  effects Out
+{
+  let a: List<Int> = List.new()
+  for i in 0 .. n { a.push(i * 7 mod 13) }
+  var best = 0
+  for i in 0 .. n - 1 {
+    let d = a[i] - a[i + 1]
+    let m = if d < 0 { -d } else { d }
+    if m > best {
+      best = m
+    }
+  }
+  out.print(str(best))
+  0
+}

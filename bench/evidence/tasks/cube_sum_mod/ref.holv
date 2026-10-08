@@ -1,0 +1,14 @@
+holv 0
+
+cap Out { print(s: String): Unit }
+
+fn main(out: Out, n: Int) -> Int
+  effects Out
+{
+  var acc = 0
+  for i in 1 .. n + 1 {
+    acc = (acc + i * i * i mod 1000000007) mod 1000000007
+  }
+  out.print(str(acc))
+  0
+}

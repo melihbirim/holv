@@ -1,0 +1,1 @@
+Let a_i = (i * 7) mod 13 for i = 0, 1, ..., n-1 (n terms). Print the largest absolute difference between two neighbouring terms, that is the maximum of |a_i - a_(i+1)| over i from 0 to n-2. n is at least 2.

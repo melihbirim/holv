@@ -1,0 +1,43 @@
+{
+ "params": [
+  "n"
+ ],
+ "visible": {
+  "args": [
+   5
+  ],
+  "stdout": "7"
+ },
+ "hidden": [
+  {
+   "args": [
+    2
+   ],
+   "stdout": "7"
+  },
+  {
+   "args": [
+    3
+   ],
+   "stdout": "7"
+  },
+  {
+   "args": [
+    4
+   ],
+   "stdout": "7"
+  },
+  {
+   "args": [
+    13
+   ],
+   "stdout": "7"
+  },
+  {
+   "args": [
+    100
+   ],
+   "stdout": "7"
+  }
+ ]
+}

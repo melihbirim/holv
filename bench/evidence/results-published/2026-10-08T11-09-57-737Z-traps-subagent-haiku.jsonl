@@ -1,0 +1,8 @@
+{"task":"cube_sum_mod","lang":"ts","attempts":1,"passed":true,"stages":["pass"],"feedback":[],"agent_ms":37041,"first_try":true,"compile_failures":0,"silent_wrong":false}
+{"task":"cube_sum_mod","lang":"holv","attempts":1,"passed":true,"stages":["pass"],"feedback":[],"agent_ms":39564,"first_try":true,"compile_failures":0,"silent_wrong":false}
+{"task":"mulmod","lang":"ts","attempts":1,"passed":true,"stages":["pass"],"feedback":[],"agent_ms":36586,"first_try":true,"compile_failures":0,"silent_wrong":false}
+{"task":"mulmod","lang":"holv","attempts":1,"passed":true,"stages":["pass"],"feedback":[],"agent_ms":47366,"first_try":true,"compile_failures":0,"silent_wrong":false}
+{"task":"argsum","lang":"ts","attempts":1,"passed":true,"stages":["pass"],"feedback":[],"agent_ms":29245,"first_try":true,"compile_failures":0,"silent_wrong":false}
+{"task":"argsum","lang":"holv","attempts":1,"passed":true,"stages":["pass"],"feedback":[],"agent_ms":35761,"first_try":true,"compile_failures":0,"silent_wrong":false}
+{"task":"adjacent_max","lang":"ts","attempts":1,"passed":true,"stages":["pass"],"feedback":[],"agent_ms":36000,"first_try":true,"compile_failures":0,"silent_wrong":false}
+{"task":"adjacent_max","lang":"holv","attempts":1,"passed":true,"stages":["pass"],"feedback":[],"agent_ms":49590,"first_try":true,"compile_failures":0,"silent_wrong":false}

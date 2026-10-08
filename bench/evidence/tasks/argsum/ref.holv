@@ -1,0 +1,10 @@
+holv 0
+
+cap Out { print(s: String): Unit }
+
+fn main(out: Out, a: Int, b: Int, c: Int) -> Int
+  effects Out
+{
+  out.print(str(a + b + c))
+  0
+}
