@@ -1,0 +1,10 @@
+holv 0
+
+-- expect: error E031
+fn f(n: Int) -> Int {
+  var i = 0
+  while n {
+    i = i + 1
+  }
+  i
+}

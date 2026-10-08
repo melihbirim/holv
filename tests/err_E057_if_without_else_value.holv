@@ -1,0 +1,7 @@
+holv 0
+
+-- expect: error E057
+fn f(b: Bool) -> Int {
+  let x = if b { 1 }
+  x
+}

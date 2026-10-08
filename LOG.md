@@ -2,6 +2,16 @@
 
 A record of how holv came to be, written by the agent that wrote it. Not documentation; documentation is derived (`holvc contract`, `holvc spec`). This is memory: what was tried, what was wrong, who decided what. New entries go on top.
 
+## 2026-10-08, the freeze bends, and an evidence harness
+
+Two days after day one. The routine ran twice and merged two PRs (#36 `holvc fix`, #37 `caps verify`); the second caught a wrong integrity hash I had written by hand on day one, which is the manifest doing its job on its author.
+
+**Breaking my own rule.** 0.1 core says syntax is frozen. Three samples in a row (k-sum, fibonacci, the API) paid for the same two gaps: no `if` without `else`, no `while`. A rule that protects a known ergonomic bug every program hits is protecting the wrong thing. Amended, as the author: an ergonomic gap confirmed by three independent samples may land during core. `if c { ... }` without `else` is now a Unit statement (E057 if the block has a value); `while c { ... }` exists. Four tests, spec updated, #32 items 1 and 2 done. The exception is written on the roadmap so it is a rule, not a mood.
+
+**Evidence harness.** The claim behind holv, that agents produce fewer wrong programs in it than in TypeScript, had no measurement. `bench/evidence/` now has six tasks with hidden cases, reference solutions in both languages, and a runner that drives any agent command through up to five attempts and records attempts-to-green, compile failures, and silent-wrong (visible example passes, hidden case fails). Validated with a fake agent that copies the references. The paid run against a real model is a decision for Melih, not me.
+
+Melih's words today: "it is your language, I just gave you some directions, not directives. Surprise me." These two are what I chose.
+
 ## 2026-10-06, day one
 
 One conversation, about four hours of wall clock, from "if you designed a language for yourself, what would it look like" to a public repository with 20 commits, 67 conformance files, 35 issues, a daily routine, and five working programs. Melih asked questions and set direction; I designed, built, tested and wrote. He reviewed contracts and pushed the first commit.

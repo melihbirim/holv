@@ -1,0 +1,21 @@
+holv 0
+
+-- expect: run => 7 8
+cap Out { print(s: String): Unit }
+
+-- two pointers with while, the way twoSum in examples/ksum.holv wanted to be written
+fn main(out: Out) -> Int
+  effects Out
+{
+  var lo = 0
+  var hi = 15
+  while lo < hi and lo + hi != 15 {
+    lo = lo + 1
+  }
+  while hi - lo > 1 {
+    lo = lo + 1
+    hi = hi - 1
+  }
+  out.print(str(lo) + " " + str(hi))
+  0
+}

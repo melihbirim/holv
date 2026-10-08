@@ -22,7 +22,7 @@ class HolvError extends Error {
 }
 
 // ---------------------------------------------------------------- lexer
-const KW = new Set(["type","cap","fn","effects","example","let","var","for","in","if","else","hole","div","mod","and","or","not","true","false"]);
+const KW = new Set(["type","cap","fn","effects","example","let","var","for","in","while","if","else","hole","div","mod","and","or","not","true","false"]);
 const OPS2 = ["..","==","!=","<=",">=","->"];
 const OPS1 = "{}()[]<>,:.+-*/=";
 
@@ -148,6 +148,8 @@ class Parser {
       } else if (this.at("for")) {
         this.p++; const v = this.ident(); this.expect("in"); const from = this.expr(); this.expect(".."); const to = this.expr();
         stmts.push({ k: "for", v, from, to, body: this.block(), ...this.pos(k) });
+      } else if (this.at("while")) {
+        this.p++; const cond = this.expr(); stmts.push({ k: "while", cond, body: this.block(), ...this.pos(k) });
       } else if (this.at("ident") && this.peek(1).t === "=") {
         const name = this.ident(); this.p++; stmts.push({ k: "assign", name, expr: this.expr(), ...this.pos(k) });
       } else {
@@ -196,7 +198,7 @@ class Parser {
     if (this.eat("false")) return { k: "bool", v: false, ...p };
     if (this.eat("hole")) return { k: "hole", type: this.typeRef(), ...p };
     if (this.eat("(")) { const e = this.expr(); this.expect(")"); return e; }
-    if (this.eat("if")) { const cond = this.expr(); const then = this.block(); this.expect("else"); return { k: "if", cond, then, else: this.block(), ...p }; }
+    if (this.eat("if")) { const cond = this.expr(); const then = this.block(); const els = this.eat("else") ? this.block() : null; return { k: "if", cond, then, else: els, ...p }; }
     if (this.eat("fn")) {
       const params = []; this.expect("(");
       while (!this.at(")")) { const t = this.peek(); params.push({ name: this.ident(), ...this.pos(t) }); if (!this.eat(",")) break; }
@@ -302,6 +304,9 @@ class Checker {
         if (!v.mut) this.err("E054", s, `${s.name} is immutable; declare it with 'var'`, { do: `change 'let ${s.name}' to 'var ${s.name}' where it is declared`, replace: `let ${s.name}`, with: `var ${s.name}` });
         const t = this.expr(s.expr, env);
         if (!same(t, v.t)) this.err("E052", s, `${s.name}: is ${show(v.t)}, assigned ${show(t)}`, `assign a ${show(v.t)} to ${s.name}; a variable never changes type`, { expected: show(v.t), got: show(t) });
+      } else if (s.k === "while") {
+        const c = this.expr(s.cond, env); if (!same(c, T.Bool)) this.err("E031", s.cond, `while condition must be Bool, got ${show(c)}`, "write a comparison, e.g. while i < n { ... }", { expected: "Bool", got: show(c) });
+        this.block(s.body, env, false);
       } else if (s.k === "for") {
         for (const e of [s.from, s.to]) { const t = this.expr(e, env); if (!same(t, T.Int)) this.err("E055", e, `for bounds must be Int, got ${show(t)}`, "make both bounds Int: use div instead of /, or floor() on a Float", { expected: "Int", got: show(t) }); }
         const inner = new Map(env); inner.set(s.v, { t: T.Int, mut: false });
@@ -394,7 +399,9 @@ class Checker {
       case "lambda": return this.err("E034", e, "fn literals are only allowed as the argument of sortBy in holv 0", "declare a named fn at the top level and call it, or pass the fn literal directly to sortBy");
       case "if": {
         const c = this.expr(e.cond, env); if (!same(c, T.Bool)) this.err("E031", e.cond, `if condition must be Bool, got ${show(c)}`, "write a comparison, e.g. if x != 0 { ... }", { expected: "Bool", got: show(c) });
-        const a = this.block(e.then, env, true), b = this.block(e.else, env, true);
+        const a = this.block(e.then, env, true);
+        if (!e.else) { if (!same(a, T.Unit)) return this.err("E057", e, `if without else must be Unit, got ${show(a)}`, `add an else branch returning a ${show(a)}, or make the then block a statement (no value)`, { then: show(a) }); return T.Unit; }
+        const b = this.block(e.else, env, true);
         if (!same(a, b)) return this.err("E057", e, `if branches differ: ${show(a)} vs ${show(b)}`, `make the else branch a ${show(a)}, or both branches Unit if the if is a statement`, { then: show(a), else: show(b) });
         return a;
       }
@@ -464,10 +471,22 @@ function emitBlock(b, scope, fn, d, valued) {
     if (st.k === "let") { s += `${ind(d + 1)}${st.mut ? "let" : "const"} ${st.name}${st.type ? ": " + tsType(st.type) : ""} = ${emitExpr(st.expr, scope, fn)};\n`; scope.push(st.name); }
     else if (st.k === "assign") s += `${ind(d + 1)}${st.name} = ${emitExpr(st.expr, scope, fn)};\n`;
     else if (st.k === "for") s += `${ind(d + 1)}for (let ${st.v} = ${emitExpr(st.from, scope, fn)}; ${st.v} < ${emitExpr(st.to, scope, fn)}; ${st.v}++) ${emitBlock(st.body, [...scope, st.v], fn, d + 1, false)}\n`;
+    else if (st.k === "while") s += `${ind(d + 1)}while (${emitExpr(st.cond, scope, fn)}) ${emitBlock(st.body, scope, fn, d + 1, false)}\n`;
+    else if (st.expr.k === "if" && st.expr.t?.n === "Unit") s += `${ind(d + 1)}${emitIfStmt(st.expr, scope, fn, d + 1)}\n`;
     else s += `${ind(d + 1)}${emitExpr(st.expr, scope, fn)};\n`;
   }
-  if (b.tail) s += `${ind(d + 1)}${valued ? "return " : ""}${emitExpr(b.tail, scope, fn)};\n`;
+  if (b.tail && b.tail.k === "if" && b.tail.t?.n === "Unit") s += `${ind(d + 1)}${emitIfStmt(b.tail, scope, fn, d + 1)}\n`;
+  else if (b.tail) s += `${ind(d + 1)}${valued ? "return " : ""}${emitExpr(b.tail, scope, fn)};\n`;
   return s + `${ind(d)}}`;
+}
+// a Unit-typed if in statement position is a plain JS if; no IIFE, no value
+function emitIfStmt(e, scope, fn, d) {
+  const x = (n) => emitExpr(n, scope, fn);
+  let s = `if (${x(e.cond)}) ${emitBlock(e.then, scope, fn, d, false)}`;
+  let cur = e.else;
+  while (cur && cur.stmts.length === 0 && cur.tail && cur.tail.k === "if" && cur.tail.t?.n === "Unit") { s += ` else if (${x(cur.tail.cond)}) ${emitBlock(cur.tail.then, scope, fn, d, false)}`; cur = cur.tail.else; }
+  if (cur) s += ` else ${emitBlock(cur, scope, fn, d, false)}`;
+  return s;
 }
 function emitExpr(e, scope, fn) {
   const x = (n) => emitExpr(n, scope, fn);
@@ -503,6 +522,7 @@ function emitExpr(e, scope, fn) {
     case "lambda": return `(${e.params.map((p) => p.name).join(", ")}) => ${emitBlock(e.body, [...scope, ...e.params.map((p) => p.name)], fn, 1, true)}`;
     case "if": {
       const simple = (b) => b.stmts.length === 0 && b.tail;
+      if (!e.else) return `(() => { if (${x(e.cond)}) ${emitBlock(e.then, scope, fn, 1, false)} })()`;
       if (simple(e.then) && simple(e.else)) return `(${x(e.cond)} ? ${x(e.then.tail)} : ${x(e.else.tail)})`;
       return `(() => { if (${x(e.cond)}) ${emitBlock(e.then, scope, fn, 1, true)} else ${emitBlock(e.else, scope, fn, 1, true)} })()`;
     }
@@ -523,6 +543,7 @@ function format(items, comments) {
     if (st.k === "let") return `${st.mut ? "var" : "let"} ${st.name}${st.type ? ": " + typeRef(st.type) : ""} = ${fx(st.expr, d)}`;
     if (st.k === "assign") return `${st.name} = ${fx(st.expr, d)}`;
     if (st.k === "for") return `for ${st.v} in ${fx(st.from, d)} .. ${fx(st.to, d)} ${block(st.body, d)}`;
+    if (st.k === "while") return `while ${fx(st.cond, d)} ${block(st.body, d)}`;
     return fx(st.expr, d);
   };
   const block = (b, d) => {
@@ -551,7 +572,7 @@ function format(items, comments) {
       case "method": return `${fx(e.obj, d, 99)}.${e.name}(${e.args.map((a) => fx(a, d)).join(", ")})`;
       case "struct": return `${e.name} { ${e.fields.map((f) => `${f.name}: ${fx(f.expr, d)}`).join(", ")} }`;
       case "lambda": return `fn(${e.params.map((p) => p.name).join(", ")}) ${block(e.body, d)}`;
-      case "if": return `if ${fx(e.cond, d)} ${block(e.then, d)} else ${block(e.else, d)}`;
+      case "if": return `if ${fx(e.cond, d)} ${block(e.then, d)}${e.else ? ` else ${block(e.else, d)}` : ""}`;
       case "hole": return `hole ${typeRef(e.type)}`;
       default: throw new Error("fmt: unknown node " + e.k);
     }

@@ -1,0 +1,18 @@
+holv 0
+
+-- expect: run => 3 odd
+cap Out { print(s: String): Unit }
+
+fn main(out: Out, n: Int) -> Int
+  effects Out
+{
+  var count = 0
+  for i in 0 .. n { if i mod 2 == 1 {
+    count = count + 1
+  } }
+  if count > 0 { out.print(str(count) + " odd") }
+  if count > 100 { out.print("never") } else { if count == 3 {
+  } else { out.print("never either") } }
+  0
+}
+-- args: 6
