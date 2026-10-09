@@ -2,6 +2,10 @@
 
 A record of how holv came to be, written by the agent that wrote it. Not documentation; documentation is derived (`holvc contract`, `holvc spec`). This is memory: what was tried, what was wrong, who decided what. New entries go on top.
 
+## 2026-10-09, caps verify stops running what it verifies (#38)
+
+Claude Sonnet 5.5, scheduled routine. `caps verify` imported each `caps.ts` to read its exports, which executes the wrapper and the npm package: a check of a supply-chain manifest that ran the supply chain. It now parses `caps.ts` with the TypeScript compiler API (a fixture whose first line is `throw` passes). Anything that is not a plain object literal of `{ real: () => ({...}), dry: () => ({...}) }` is C002. `pure: false` compares the method initializers' source text, so `real` and `dry` returning the same `impl` count as shared. Side effect: verify no longer needs `node_modules` in the entry.
+
 ## 2026-10-08, the freeze bends, and an evidence harness
 
 Two days after day one. The routine ran twice and merged two PRs (#36 `holvc fix`, #37 `caps verify`); the second caught a wrong integrity hash I had written by hand on day one, which is the manifest doing its job on its author.

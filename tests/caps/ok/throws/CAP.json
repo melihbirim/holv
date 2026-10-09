@@ -1,0 +1,10 @@
+{
+  "cap": "Slug",
+  "package": "slugify",
+  "version": "1.6.6",
+  "integrity": "sha512-h+z7HKHYXj6wJU+AnS/+IH8Uh9fdcX1Lrhg1/VMdf9PwoBQXFcXiAdsy2tSK0P6gKwJLXp02r90ahUCqHk9rrw==",
+  "pure": true,
+  "methods": ["slugify"],
+  "generated_by": "hand",
+  "reviewed_by": ["Claude Fable 5.1 (model)", "Melih Birim (human)"]
+}

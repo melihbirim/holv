@@ -6,6 +6,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
+import { createRequire } from "node:module";
 import { fileURLToPath } from "node:url";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -833,10 +834,50 @@ function fixFile(file) {
 
 
 // ---- caps verify -------------------------------------------------------------------------------------------
-// Checks every caps/<name>/ entry against its manifest. Importing caps.ts runs the wrapper (and the package), in a child process.
-function capsVerify() {
-  const dir = path.join(HERE, "caps"), errors = [];
-  const bad = (entry, msg, fix) => errors.push({ entry, code: "C001", msg, fix: { do: fix } });
+// Checks every caps/<name>/ entry against its manifest. caps.ts is parsed with the TypeScript compiler API and never imported:
+// verifying a wrapper must not run the wrapper or the package it wraps. Anything that is not a plain literal is C002.
+function readCapsTs(ts, text) {
+  const sf = ts.createSourceFile("caps.ts", text, ts.ScriptTarget.Latest, true), fail = (msg, fix) => { throw { msg, fix }; };
+  const top = new Map(), exportsSeen = [];
+  let def;
+  const unwrap = (e) => { while (e && (ts.isAsExpression(e) || ts.isParenthesizedExpression(e) || ts.isSatisfiesExpression(e))) e = e.expression; return e; };
+  for (const st of sf.statements) {
+    if (ts.isVariableStatement(st)) {
+      const ex = st.modifiers?.some((m) => m.kind === ts.SyntaxKind.ExportKeyword);
+      for (const d of st.declarationList.declarations) if (ts.isIdentifier(d.name)) { top.set(d.name.text, d.initializer); if (ex) exportsSeen.push(d.name.text); }
+    } else if (ts.isExportAssignment(st)) { def = unwrap(st.expression); exportsSeen.push("default"); }
+    else if (ts.isExportDeclaration(st)) exportsSeen.push("*");
+    else if (st.modifiers?.some((m) => m.kind === ts.SyntaxKind.ExportKeyword)) exportsSeen.push(st.name?.text ?? "?");
+  }
+  if (!def) fail("caps.ts has no default export", "export default a plain object literal of { Cap: { real: () => ..., dry: () => ... } }");
+  const lit = (e, what) => { e = unwrap(e); if (e && ts.isIdentifier(e) && top.has(e.text)) e = unwrap(top.get(e.text)); if (!e || !ts.isObjectLiteralExpression(e)) fail(what + " is not a plain object literal", "write " + what + " as an object literal; dynamic construction cannot be reviewed"); return e; };
+  const key = (p, what) => { if (!ts.isPropertyAssignment(p) && !ts.isMethodDeclaration(p) || !(ts.isIdentifier(p.name) || ts.isStringLiteral(p.name))) fail(what + " has a spread, computed or shorthand entry", "list every entry as name: value"); return p.name.text; };
+  const body = (fnNode, what) => {
+    const f = unwrap(fnNode);
+    if (!f || !(ts.isArrowFunction(f) || ts.isFunctionExpression(f)) || f.parameters.length) fail(what + " is not a no-argument arrow function", "write " + what + " as () => ({ ... })");
+    let e = f.body;
+    if (ts.isBlock(e)) { const r = e.statements.filter(ts.isReturnStatement); if (r.length !== 1 || e.statements.length !== 1) fail(what + " must be a single return of an object literal", "write " + what + " as () => ({ ... })"); e = r[0].expression; }
+    const o = lit(e, what + " result"), m = new Map();
+    for (const p of o.properties) m.set(key(p, what + " result"), p.getText(sf));
+    return m;
+  };
+  const caps = {};
+  for (const p of lit(def, "the default export").properties) {
+    const name = key(p, "the default export");
+    if (!ts.isPropertyAssignment(p)) fail("cap " + name + " is not name: { real, dry }", "write each cap as name: { real: () => ..., dry: () => ... }");
+    const o = lit(p.initializer, "cap " + name), parts = {};
+    for (const q of o.properties) parts[key(q, "cap " + name)] = ts.isPropertyAssignment(q) ? q.initializer : fail("cap " + name + "." + key(q) + " is not real: () => ...", "write real and dry as arrow functions");
+    if (Object.keys(parts).sort().join() !== "dry,real") fail("cap " + name + " must have exactly real and dry", "give the cap exactly { real: () => ..., dry: () => ... }");
+    const r = body(parts.real, name + ".real"), y = body(parts.dry, name + ".dry");
+    caps[name] = { real: [...r.keys()].sort(), dry: [...y.keys()].sort(), same: [...r.keys()].filter((k) => y.get(k) === r.get(k)) };
+  }
+  return { exports: exportsSeen, caps };
+}
+
+function capsVerify(dirArg) {
+  const dir = dirArg ? path.resolve(dirArg) : path.join(HERE, "caps"), errors = [];
+  const ts = createRequire(path.join(HERE, "package.json"))("typescript");
+  const bad = (entry, msg, fix, code = "C001") => errors.push({ entry, code, msg, fix: { do: fix } });
   for (const name of fs.readdirSync(dir).filter((n) => fs.statSync(path.join(dir, n)).isDirectory()).sort()) {
     const d = path.join(dir, name), rd = (f) => fs.readFileSync(path.join(d, f), "utf8");
     let m; try { m = JSON.parse(rd("CAP.json")); } catch (e) { bad(name, `CAP.json: ${e.message}`, "add a valid CAP.json; see caps/README.md"); continue; }
@@ -847,14 +888,8 @@ function capsVerify() {
     const lock = rd("pnpm-lock.yaml").match(new RegExp(`^  '?${esc}@${m.version.replace(/\./g, "\\.")}'?:\\n    resolution: \\{integrity: (\\S+?)[,}]`, "m"));
     if (!lock) bad(name, `pnpm-lock.yaml has no entry for ${m.package}@${m.version}`, "run pnpm install in the entry directory so the lockfile pins this version");
     else if (lock[1] !== m.integrity) bad(name, `CAP.json.integrity differs from pnpm-lock.yaml (${lock[1]})`, "copy the integrity from pnpm-lock.yaml into CAP.json; a human reviews this change");
-    if (!fs.existsSync(path.join(d, "node_modules"))) { bad(name, "node_modules missing, cannot load caps.ts", `run: pnpm install --frozen-lockfile --dir caps/${name}`); continue; }
-    const probe = `const m = await import(${JSON.stringify(path.join(d, "caps.ts"))}); const c = m.default ?? {};
-      const out = { exports: Object.keys(m), caps: {} };
-      for (const [k, v] of Object.entries(c)) { const r = v.real(), y = v.dry(); out.caps[k] = { real: Object.keys(r).sort(), dry: Object.keys(y).sort(), same: Object.keys(r).filter((x) => r[x] === y[x]) }; }
-      console.log(JSON.stringify(out));`;
-    const r = spawnSync(process.execPath, ["--experimental-strip-types", "--no-warnings", "--input-type=module", "-e", probe], { encoding: "utf8" });
-    if (r.status !== 0) { bad(name, `caps.ts does not load: ${r.stderr.trim().split("\n")[0]}`, "make caps.ts import cleanly; see caps/README.md"); continue; }
-    const got = JSON.parse(r.stdout), want = [...(m.methods ?? [])].sort(), c = got.caps[m.cap];
+    let got; try { got = readCapsTs(ts, rd("caps.ts")); } catch (e) { if (e.msg === undefined) throw e; bad(name, "caps.ts: " + e.msg, e.fix, "C002"); continue; }
+    const want = [...(m.methods ?? [])].sort(), c = got.caps[m.cap];
     if (got.exports.join() !== "default") bad(name, `caps.ts exports ${got.exports.join(", ")}`, "export only the default registry from caps.ts");
     if (Object.keys(got.caps).join() !== String(m.cap)) bad(name, `caps.ts registers ${Object.keys(got.caps).join(", ")}, manifest says ${m.cap}`, "register exactly the manifest's cap in caps.ts");
     else {
@@ -873,10 +908,10 @@ const [, , cmd, file, ...rawRest] = process.argv;
 const flag = (name) => { const i = rawRest.indexOf(name); return i >= 0 ? rawRest[i + 1] : undefined; };
 const capsOpt = flag("--caps"), targetOpt = flag("--target");
 const rest = rawRest.filter((a, i) => !(["--caps", "--target"].includes(a) || ["--caps", "--target"].includes(rawRest[i - 1])));
-const usage = "usage: holvc check|build|run|test|contract <file.holv> [args] [--caps file.ts] [--target ts] [--simulate] | holvc fmt <file.holv> [--write|--check] | holvc fix <file.holv> | holvc caps verify | holvc spec";
+const usage = "usage: holvc check|build|run|test|contract <file.holv> [args] [--caps file.ts] [--target ts] [--simulate] | holvc fmt <file.holv> [--write|--check] | holvc fix <file.holv> | holvc caps verify [dir] | holvc spec";
 try {
   if (cmd === "spec") process.stdout.write(fs.readFileSync(path.join(HERE, "spec.md"), "utf8"));
-  else if (cmd === "caps" && file === "verify") { if (!capsVerify()) process.exit(1); }
+  else if (cmd === "caps" && file === "verify") { if (!capsVerify(rawRest[0])) process.exit(1); }
   else if (!file) { console.error(usage); process.exit(2); }
   else if (cmd === "check") { const { items, errors } = compile(file); if (!report(file, errors)) process.exit(1); console.log(JSON.stringify({ ok: true, file, fns: items.filter((i) => i.k === "fn").length })); }
   else if (cmd === "fix") {
