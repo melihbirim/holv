@@ -736,8 +736,9 @@ const tsBackend = {
     const r = spawnSync(tsc, ["--strict", "--noEmit", "--noUncheckedIndexedAccess", "--allowImportingTsExtensions", "--module", "nodenext", "--target", "es2022", "--skipLibCheck", ...files.filter((f) => f.endsWith(".ts") && f !== "runtime.ts").map((f) => path.join(outDir, f)), ...(capsFile ? [capsFile] : [])], { encoding: "utf8" });
     return r.status === 0 ? { status: "ok" } : { status: "rejected", output: r.stdout.trim() };
   },
-  run(outDir, name, args, env = {}) {
-    const r = spawnSync(process.execPath, ["--experimental-strip-types", "--no-warnings", path.join(outDir, `${name}.run.ts`), ...args], { stdio: "inherit", env: { ...process.env, ...env } });
+  run(outDir, name, args, env = {}, sandbox = null) {
+    const perm = sandbox ? ["--permission", ...sandbox.read.map((d) => `--allow-fs-read=${d}`)] : [];
+    const r = spawnSync(process.execPath, [...perm, "--experimental-strip-types", "--no-warnings", path.join(outDir, `${name}.run.ts`), ...args], { stdio: "inherit", env: { ...process.env, ...env } });
     process.exit(r.status ?? 1);
   },
 };
@@ -904,11 +905,22 @@ function capsVerify(dirArg) {
 }
 
 
+// --sandbox: Node's permission model. Filesystem reads are limited to the generated code, the program's directory and
+// the caps wrapper's directory (its node_modules); no child processes, no workers, no fs writes. The network stays open.
+function sandboxPolicy(file, b) {
+  if (!process.allowedNodeEnvironmentFlags.has("--permission")) {
+    console.error(JSON.stringify({ file, code: "E063", msg: `--sandbox needs Node's permission model; Node ${process.versions.node} has no --permission flag`, fix: { do: "run holvc under Node 22.13 or newer, or drop --sandbox and accept that the program runs with the full authority of the process" } }));
+    process.exit(1);
+  }
+  const read = [b.outDir, path.dirname(path.resolve(file)), ...(b.capsFile ? [path.dirname(b.capsFile)] : [])].map((d) => path.resolve(d));
+  return { read: [...new Set(read)] };
+}
+
 const [, , cmd, file, ...rawRest] = process.argv;
 const flag = (name) => { const i = rawRest.indexOf(name); return i >= 0 ? rawRest[i + 1] : undefined; };
 const capsOpt = flag("--caps"), targetOpt = flag("--target");
-const rest = rawRest.filter((a, i) => !(["--caps", "--target"].includes(a) || ["--caps", "--target"].includes(rawRest[i - 1])));
-const usage = "usage: holvc check|build|run|test|contract <file.holv> [args] [--caps file.ts] [--target ts] [--simulate] | holvc fmt <file.holv> [--write|--check] | holvc fix <file.holv> | holvc caps verify [dir] | holvc spec";
+const rest = rawRest.filter((a, i) => !(["--caps", "--target", "--sandbox"].includes(a) || ["--caps", "--target"].includes(rawRest[i - 1])));
+const usage = "usage: holvc check|build|run|test|contract <file.holv> [args] [--caps file.ts] [--target ts] [--simulate] [--sandbox] | holvc fmt <file.holv> [--write|--check] | holvc fix <file.holv> | holvc caps verify [dir] | holvc spec";
 try {
   if (cmd === "spec") process.stdout.write(fs.readFileSync(path.join(HERE, "spec.md"), "utf8"));
   else if (cmd === "caps" && file === "verify") { if (!capsVerify(rawRest[0])) process.exit(1); }
@@ -922,7 +934,7 @@ try {
   }
   else if (cmd === "contract") { const { items, errors } = compile(file); if (!report(file, errors)) process.exit(1); console.log(JSON.stringify(contract(items, path.basename(file).replace(/\.holv$/, "")), null, 2)); }
   else if (cmd === "build") { const b = build(file, { target: targetOpt }); console.log(JSON.stringify({ ok: true, out: b.outDir, target: b.be.name })); }
-  else if (cmd === "run") { const b = build(file, { caps: capsOpt, target: targetOpt }); if (!b.hasMain) { console.error(JSON.stringify({ file, code: "E061", msg: "no fn main", fix: { do: "add fn main(...) -> Int; its parameters may be caps and Int, Float, String or Bool" } })); process.exit(1); } b.be.run(b.outDir, b.name, rest, b.capsFile ? { HOLV_CAPS: b.capsFile } : {}); }
+  else if (cmd === "run") { const b = build(file, { caps: capsOpt, target: targetOpt }); if (!b.hasMain) { console.error(JSON.stringify({ file, code: "E061", msg: "no fn main", fix: { do: "add fn main(...) -> Int; its parameters may be caps and Int, Float, String or Bool" } })); process.exit(1); } b.be.run(b.outDir, b.name, rest, b.capsFile ? { HOLV_CAPS: b.capsFile } : {}, rawRest.includes("--sandbox") ? sandboxPolicy(file, b) : null); }
   else if (cmd === "test") { const b = build(file, { target: targetOpt }); b.be.run(b.outDir, b.name, [], { HOLV_TEST: "1" }); }
   else if (cmd === "fmt") {
     const { items, comments, src } = compile(file); // fmt only needs a parse; type errors are reported by check

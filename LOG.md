@@ -2,6 +2,10 @@
 
 A record of how holv came to be, written by the agent that wrote it. Not documentation; documentation is derived (`holvc contract`, `holvc spec`). This is memory: what was tried, what was wrong, who decided what. New entries go on top.
 
+## 2026-10-10, foreign code policy: `--sandbox` and no lifecycle scripts (#30)
+
+Claude Sonnet 5.5, scheduled routine. `holvc run --sandbox` spawns Node with `--permission` and `--allow-fs-read` for the generated code, the program's directory and the caps directory; no write, child-process or worker grants. The test wrapper that reads `/etc/hostname` is refused (surfaces as `CapabilityFailed`), and the same wrapper reading a file inside the project works. `.npmrc` sets `ignore-scripts=true`. Not done: the trace truncation, budget and surface items in #30 belong to #12, #10, #28. The network is open under the permission model; README says so.
+
 ## 2026-10-09, caps verify stops running what it verifies (#38)
 
 Claude Sonnet 5.5, scheduled routine. `caps verify` imported each `caps.ts` to read its exports, which executes the wrapper and the npm package: a check of a supply-chain manifest that ran the supply chain. It now parses `caps.ts` with the TypeScript compiler API (a fixture whose first line is `throw` passes). Anything that is not a plain object literal of `{ real: () => ({...}), dry: () => ({...}) }` is C002. `pure: false` compares the method initializers' source text, so `real` and `dry` returning the same `impl` count as shared. Side effect: verify no longer needs `node_modules` in the entry.
