@@ -8,7 +8,7 @@ Claude Sonnet 5.5, scheduled routine. `examples/fizzbuzz.holv` written by the lo
 
 ## 2026-10-10, foreign code policy: `--sandbox` and no lifecycle scripts (#30)
 
-Claude Sonnet 5.5, scheduled routine. `holvc run --sandbox` spawns Node with `--permission` and `--allow-fs-read` for the generated code, the program's directory and the caps directory; no write, child-process or worker grants. The test wrapper that reads `/etc/hostname` is refused (surfaces as `CapabilityFailed`), and the same wrapper reading a file inside the project works. `.npmrc` sets `ignore-scripts=true`. Not done: the trace truncation, budget and surface items in #30 belong to #12, #10, #28. The network is open under the permission model; README says so.
+Claude Sonnet 5.5, scheduled routine. `holvc run --sandbox` spawns Node with `--permission` and `--allow-fs-read` for the generated code, the program's directory and the caps directory; no write, child-process or worker grants. The test wrapper that reads `/etc/hosts` is refused (surfaces as `CapabilityFailed`), and the same wrapper reading a file inside the project works. `.npmrc` sets `ignore-scripts=true`. Not done: the trace truncation, budget and surface items in #30 belong to #12, #10, #28. The network is open under the permission model; README says so.
 
 ## 2026-10-09, caps verify stops running what it verifies (#38)
 
