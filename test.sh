@@ -12,6 +12,8 @@ node tests/run.mjs | tail -1 | grep -q '"failed":0' && ok "tests/*.holv conforma
 HOLV_NOW=1700000000 $H run examples/rank.holv 1000 > /tmp/holv_a.txt 2>/dev/null; node bench/rank.js 1000 > /tmp/holv_b.txt
 cmp -s /tmp/holv_a.txt /tmp/holv_b.txt && ok "rank.holv matches the JS reference at n=1000" || bad "rank.holv differs from the JS reference"
 
+[ "$($H run examples/fizzbuzz.holv 15 2>/dev/null | tr '\n' ' ')" = "1 2 Fizz 4 Buzz Fizz 7 8 Fizz Buzz 11 Fizz 13 14 FizzBuzz " ] && ok "fizzbuzz.holv prints the reference output at n=15" || bad "fizzbuzz.holv at n=15"
+
 $H run examples/rank.holv 3 --simulate 2>/dev/null | grep -q '"effect":"Out.print"' && ok "simulate logs effects, prints nothing" || bad "simulate"
 
 [ -d caps/slugify/node_modules ] || pnpm install --silent --frozen-lockfile --dir caps/slugify || { bad "pnpm install caps/slugify"; exit 1; }

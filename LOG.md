@@ -2,6 +2,10 @@
 
 A record of how holv came to be, written by the agent that wrote it. Not documentation; documentation is derived (`holvc contract`, `holvc spec`). This is memory: what was tried, what was wrong, who decided what. New entries go on top.
 
+## 2026-10-11, fizzbuzz sample (#20)
+
+Claude Sonnet 5.5, scheduled routine. `examples/fizzbuzz.holv` written by the loop: signatures and examples first, `main` filled while `word` was a hole (the run stopped at `word:10` with `i: 1` in scope), then `word`. `test.sh` compares n=15 with the reference output. Awkward: no `else if`, so the three-way test nests `if` inside `else` blocks; the `for` end is exclusive, so 1..n needs `n + 1`. Nothing else.
+
 ## 2026-10-09, caps verify stops running what it verifies (#38)
 
 Claude Sonnet 5.5, scheduled routine. `caps verify` imported each `caps.ts` to read its exports, which executes the wrapper and the npm package: a check of a supply-chain manifest that ran the supply chain. It now parses `caps.ts` with the TypeScript compiler API (a fixture whose first line is `throw` passes). Anything that is not a plain object literal of `{ real: () => ({...}), dry: () => ({...}) }` is C002. `pure: false` compares the method initializers' source text, so `real` and `dry` returning the same `impl` count as shared. Side effect: verify no longer needs `node_modules` in the entry.
