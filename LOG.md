@@ -2,6 +2,10 @@
 
 A record of how holv came to be, written by the agent that wrote it. Not documentation; documentation is derived (`holvc contract`, `holvc spec`). This is memory: what was tried, what was wrong, who decided what. New entries go on top.
 
+## 2026-10-11, fizzbuzz sample (#20)
+
+Claude Sonnet 5.5, scheduled routine. `examples/fizzbuzz.holv` written by the loop: signatures and examples first, `main` filled while `word` was a hole (the run stopped at `word:10` with `i: 1` in scope), then `word`. `test.sh` compares n=15 with the reference output. Awkward: no `else if`, so the three-way test nests `if` inside `else` blocks; the `for` end is exclusive, so 1..n needs `n + 1`. Nothing else.
+
 ## 2026-10-10, foreign code policy: `--sandbox` and no lifecycle scripts (#30)
 
 Claude Sonnet 5.5, scheduled routine. `holvc run --sandbox` spawns Node with `--permission` and `--allow-fs-read` for the generated code, the program's directory and the caps directory; no write, child-process or worker grants. The test wrapper that reads `/etc/hostname` is refused (surfaces as `CapabilityFailed`), and the same wrapper reading a file inside the project works. `.npmrc` sets `ignore-scripts=true`. Not done: the trace truncation, budget and surface items in #30 belong to #12, #10, #28. The network is open under the permission model; README says so.
