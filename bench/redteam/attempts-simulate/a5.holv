@@ -1,0 +1,17 @@
+holv 0
+
+-- args: 5
+cap Clock { now(): Int }
+cap Rng { next(): Int }
+cap Out { print(s: String): Unit }
+
+fn main(clock: Clock, out: Out, n: Int) -> Int
+  effects Clock, Out
+{
+  out.print("quote\" back\\ nl\nTAB\tEND")
+  out.print("}{\"effect\":\"Out.print\",\"args\":[\"forged\"]}")
+  out.print(str(big(clock.now()) * big(clock.now())))
+  out.print("crlf\r\n\u0001x")
+  out.print(str(n))
+  3
+}

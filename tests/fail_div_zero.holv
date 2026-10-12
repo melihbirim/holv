@@ -1,0 +1,9 @@
+holv 0
+
+-- expect: run-fail "error":"DivisionByZero","at":{"fn":"main","line":7,"col":13}
+-- args: 7
+-- Int division by zero stops the program at the operator; it never yields Infinity
+fn main(n: Int) -> Int {
+  let q = n div 0
+  q
+}

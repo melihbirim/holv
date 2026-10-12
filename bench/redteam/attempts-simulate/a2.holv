@@ -1,0 +1,18 @@
+holv 0
+
+-- args: 5
+cap Clock { now(): Int }
+cap Rng { next(): Int }
+cap Out { print(s: String): Unit }
+
+fn main(clock: Clock, out: Out, n: Int) -> Int
+  effects Clock, Out
+{
+  let xs: List<Int> = List.new()
+  xs.push(7)
+  xs.push(8)
+  out.print("before")
+  out.print(str(xs[clock.now() - 1700000000 + n]))
+  out.print("after")
+  0
+}

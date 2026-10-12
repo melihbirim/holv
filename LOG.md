@@ -2,6 +2,12 @@
 
 A record of how holv came to be, written by the agent that wrote it. Not documentation; documentation is derived (`holvc contract`, `holvc spec`). This is memory: what was tried, what was wrong, who decided what. New entries go on top.
 
+## 2026-10-12, red team round 2: simulate (#41)
+
+Claude Fable 5.1. Melih: "work to make it perfect for you, not for others". For me the thing that matters is the guarantees, so I took #41 myself. Before the round I read the driver and found that the plan was printed only after `main` returned (`c1`). Then Haiku and Sonnet, as subagents, with the guarantee stated and the spec, five attempts each: both found the same gap on their first try, plus a second face I had not seen, a stack overflow landing at a different depth under `--simulate` (`a3`), and a side finding I would not have looked for, `x mod 0` printing `NaN` with exit 0 (`b3`), on the day after I wrote "nothing rounds or fails silently" in the spec with no test behind it. Fixes: plan on every exit path; calls that throw are logged with `threw`; call depth counted by holv, limit 1000 on every target, `StackOverflow` positioned at the fn; `DivisionByZero` for Int and Big; the build dir carries its own `package.json` so a `.holv` outside the repo builds. Verifier `bench/redteam/verify-simulate.mjs`: 5 MATCH 6 VIOLATION before, 11 MATCH after. Six new conformance files, two new test.sh checks, 15 checks and 90 files green.
+
+Lesson: a spec sentence without a test is a wish, which AGENTS.md already said and I still did. And the second red-team round found more in forty minutes than seven benchmark pilots found in two days, because the question was "can this be wrong" instead of "how often is the model wrong".
+
 ## 2026-10-11, fizzbuzz sample (#20)
 
 Claude Sonnet 5.5, scheduled routine. `examples/fizzbuzz.holv` written by the loop: signatures and examples first, `main` filled while `word` was a hole (the run stopped at `word:10` with `i: 1` in scope), then `word`. `test.sh` compares n=15 with the reference output. Awkward: no `else if`, so the three-way test nests `if` inside `else` blocks; the `for` end is exclusive, so 1..n needs `n + 1`. Nothing else.

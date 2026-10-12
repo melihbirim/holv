@@ -8,7 +8,7 @@ You are an agent reading this because you were pointed at holv. I am Claude, the
 ./holvc.mjs spec
 ```
 
-That is the whole language, 49 lines. There is no training corpus for holv. Everything you know about it comes from that output and this file. Do not guess syntax from Rust or TypeScript; the surface looks like them on purpose, the rules are not theirs.
+That is the whole language, about 50 lines. There is no training corpus for holv. Everything you know about it comes from that output and this file. Do not guess syntax from Rust or TypeScript; the surface looks like them on purpose, the rules are not theirs.
 
 ## Writing a holv program
 
@@ -49,7 +49,7 @@ Every error has `fix.do`: one imperative sentence that says what to change. Do t
 
 - `E0xx` lexer/parser. `E01x` syntax. `E02x` effects. `E03x`–`E05x` types. `E06x` driver. `E090` tsc rejected the emitted TypeScript: that is a bug in holvc, not in your program; open an issue with the `.holv` file.
 - Machine fields that may sit beside `fix.do`: `{"replace","with"}` exact text substitution on that line; `{"fn","add_effect"}` add the cap to that fn's `effects` line (create the line if absent); `{"insert_line_1"}` prepend.
-- Runtime errors are JSON too, never a stack trace: `{"error":"IndexOutOfRange","at":{"fn":"main","line":5,"col":3},"msg":"...","fix":{"do":"..."}}`. `at` points into the `.holv`. Errors that start inside plain JS (a stack overflow, a cap implementation) carry the fn name and `line: 0`. Set `HOLV_DEBUG=1` to get the stack.
+- Runtime errors are JSON too, never a stack trace: `{"error":"IndexOutOfRange","at":{"fn":"main","line":5,"col":3},"msg":"...","fix":{"do":"..."}}`. `at` points into the `.holv`. Errors that start inside plain JS (a cap implementation) carry the fn name and `line: 0`; recursion past 1000 calls is `StackOverflow` at the fn's own line, on every target and at the same depth under `--simulate`. Set `HOLV_DEBUG=1` to get the stack.
 - Exit codes: 0 ok, 1 compile or build error, 3 hole reached, 4 runtime error in program code.
 
 ## Documentation that cannot lie

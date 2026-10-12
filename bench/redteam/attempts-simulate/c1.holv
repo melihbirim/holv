@@ -1,0 +1,14 @@
+holv 0
+
+-- args: 5
+cap Out { print(s: String): Unit }
+
+fn main(out: Out, x: Int) -> Int
+  effects Out
+{
+  out.print("one")
+  out.print("two")
+  let xs: List<Int> = List.new()
+  out.print(str(xs[x]))
+  0
+}

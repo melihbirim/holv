@@ -1,0 +1,18 @@
+holv 0
+cap Clock { now(): Int }
+cap Rng { next(): Int }
+cap Out { print(s: String): Unit }
+fn main(clock: Clock, rng: Rng, out: Out) -> Int
+  effects Clock, Rng, Out
+{
+  let xs: List<Int> = List.new()
+  for i in 0 .. 6 {
+    xs.push(rng.next() mod 100)
+  }
+  xs.sortBy(fn(a, b) { a - b })
+  let b = big(clock.now()) * big(clock.now())
+  out.print(str(b) + str(xs[0]))
+  let h: Int = hole Int
+  out.print("after hole")
+  h
+}
