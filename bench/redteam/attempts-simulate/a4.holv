@@ -1,0 +1,29 @@
+holv 0
+
+-- args: 6
+cap Clock { now(): Int }
+cap Rng { next(): Int }
+cap Out { print(s: String): Unit }
+
+fn main(clock: Clock, rng: Rng, out: Out, n: Int) -> Int
+  effects Clock, Rng, Out
+{
+  let xs: List<Int> = List.new()
+  var i = 0
+  while i < n {
+    xs.push(rng.next() mod 1000)
+    i = i + 1
+  }
+  xs.sortBy(fn(a, b) {
+    let r = rng.next() mod 3
+    out.print("cmp " + str(a) + " " + str(b) + " r=" + str(r) + " t=" + str(clock.now()))
+    if a < b { -1 } else { if a > b { 1 } else { 0 } }
+  })
+  out.print("sorted " + str(xs.len))
+  var j = 0
+  while j < xs.len {
+    out.print(str(xs[j]))
+    j = j + 1
+  }
+  0
+}

@@ -24,6 +24,13 @@ $H caps verify >/dev/null 2>&1 && ok "caps verify: manifests match package.json,
 $H caps verify tests/caps/ok >/dev/null 2>&1 && ok "caps verify reads a caps.ts with a top-level throw without running it" || bad "caps verify must not execute caps.ts; run: ./holvc.mjs caps verify tests/caps/ok"
 $H caps verify tests/caps/bad 2>&1 | grep -q '"code":"C002"' && ok "caps verify rejects a dynamically built wrapper with C002" || bad "caps verify should report C002 for tests/caps/bad"
 
+# --simulate prints the plan on every exit path: effects made before a crash or a hole are not lost (red team round 2)
+[ "$($H run tests/fail_crash_after_effects.holv 5 --simulate 2>/dev/null | grep -c '"effect":"Out.print"')" = "2" ] && ok "--simulate: plan is printed after a crash, with the effects made before it" || bad "--simulate must print the plan when the program crashes"
+
+# a .holv outside any package.json tree builds and runs: the generated code carries its own module type
+tmpd=$(mktemp -d) && cp examples/fib.holv "$tmpd/" && [ "$($H run "$tmpd/fib.holv" 10 2>/dev/null)" = "fib(10) = 55" ] && ok "build: a .holv outside a package.json tree runs" || bad "a .holv outside a package.json tree should build; got: $($H run "$tmpd/fib.holv" 10 2>&1 | head -1)"
+rm -rf "$tmpd"
+
 # every file that is expected to compile is committed in canonical form
 fmtfail=0
 for f in examples/*.holv examples/npm/*.holv tests/ok_*.holv tests/run_*.holv tests/hole_*.holv tests/examples_*.holv tests/fail_*.holv; do

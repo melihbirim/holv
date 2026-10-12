@@ -1,0 +1,25 @@
+holv 0
+
+-- args: 8000
+cap Clock { now(): Int }
+cap Rng { next(): Int }
+cap Out { print(s: String): Unit }
+
+fn down(out: Out, k: Int) -> Int
+  effects Out
+{
+  if k == 0 {
+    0
+  } else {
+    out.print(str(k))
+    down(out, k - 1) + 1
+  }
+}
+
+fn main(clock: Clock, out: Out, n: Int) -> Int
+  effects Clock, Out
+{
+  let r = down(out, n)
+  out.print("depth done " + str(r))
+  0
+}

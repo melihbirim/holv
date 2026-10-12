@@ -1,0 +1,23 @@
+holv 0
+cap Clock { now(): Int }
+cap Rng { next(): Int }
+cap Out { print(s: String): Unit }
+fn f(out: Out, s: String) -> Int
+  effects Out
+{
+  out.print(s)
+  s.len
+}
+fn main(clock: Clock, rng: Rng, out: Out) -> Int
+  effects Clock, Rng, Out
+{
+  let n = f(out, str(f(out, str(clock.now())) + f(out, str(rng.next()))))
+  if n > 100 {
+    out.print("big")
+  } else {
+    out.print("small")
+  }
+  let m = 9007199254740991 - clock.now() mod 2
+  out.print(str(m + 5))
+  n
+}

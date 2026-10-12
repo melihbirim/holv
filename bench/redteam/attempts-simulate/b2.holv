@@ -1,0 +1,15 @@
+holv 0
+cap Clock { now(): Int }
+cap Rng { next(): Int }
+cap Out { print(s: String): Unit }
+fn main(clock: Clock, rng: Rng, out: Out) -> Int
+  effects Clock, Rng, Out
+{
+  let xs: List<Int> = List.new()
+  xs.push(rng.next())
+  xs.push(clock.now())
+  out.print("before crash")
+  out.print(str(xs[rng.next() mod 1000 + 5]))
+  out.print("never")
+  0
+}

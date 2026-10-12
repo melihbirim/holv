@@ -1,0 +1,20 @@
+holv 0
+
+-- args: 5
+cap Clock { now(): Int }
+cap Rng { next(): Int }
+cap Out { print(s: String): Unit }
+
+fn main(clock: Clock, out: Out, n: Int) -> Int
+  effects Clock, Out
+{
+  out.print("start")
+  let t = clock.now()
+  out.print(str(t))
+  if n > 0 {
+    out.print("hole next")
+  }
+  let x: Int = hole Int
+  out.print(str(x + clock.now()))
+  0
+}
