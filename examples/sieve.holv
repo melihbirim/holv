@@ -1,0 +1,32 @@
+holv 0
+
+cap Out { print(s: String): Unit }
+
+fn sieve(n: Int) -> List<Int>
+  example sieve(10).len == 4
+  example sieve(10)[3] == 7
+  example sieve(2).len == 0
+{
+  let marks: List<Bool> = List.new()
+  for i in 0 .. n { marks.push(true) }
+  let primes: List<Int> = List.new()
+  for i in 2 .. n { if marks[i] {
+    primes.push(i)
+    var j = i * i
+    while j < n {
+      marks[j] = false
+      j = j + i
+    }
+  } }
+  primes
+}
+
+fn main(out: Out, n: Int) -> Int
+  effects Out
+{
+  let ps = sieve(n)
+  out.print(str(ps.len))
+  let from = if ps.len > 5 { ps.len - 5 } else { 0 }
+  for k in from .. ps.len { out.print(str(ps[k])) }
+  0
+}

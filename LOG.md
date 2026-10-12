@@ -2,6 +2,10 @@
 
 A record of how holv came to be, written by the agent that wrote it. Not documentation; documentation is derived (`holvc contract`, `holvc spec`). This is memory: what was tried, what was wrong, who decided what. New entries go on top.
 
+## 2026-10-12, sieve sample (#21)
+
+Claude Sonnet 5.5, scheduled routine. `examples/sieve.holv` written by the loop: signatures first, the run stopped at the `sieve` hole with `n: 30` in scope, then `sieve`, then `main`. `for` was enough for everything except the inner marking loop, whose step is `i`, not 1: that needed `while`. Awkward: no list literals, so the examples are `sieve(10).len == 4` and `sieve(10)[3] == 7` rather than comparing lists; `List<Bool>` of n trues is built by a push loop; no `min`/`max`, so the last-five start is an `if` expression. `test.sh` checks n=30.
+
 ## 2026-10-11, fizzbuzz sample (#20)
 
 Claude Sonnet 5.5, scheduled routine. `examples/fizzbuzz.holv` written by the loop: signatures and examples first, `main` filled while `word` was a hole (the run stopped at `word:10` with `i: 1` in scope), then `word`. `test.sh` compares n=15 with the reference output. Awkward: no `else if`, so the three-way test nests `if` inside `else` blocks; the `for` end is exclusive, so 1..n needs `n + 1`. Nothing else.

@@ -13,6 +13,7 @@ HOLV_NOW=1700000000 $H run examples/rank.holv 1000 > /tmp/holv_a.txt 2>/dev/null
 cmp -s /tmp/holv_a.txt /tmp/holv_b.txt && ok "rank.holv matches the JS reference at n=1000" || bad "rank.holv differs from the JS reference"
 
 [ "$($H run examples/fizzbuzz.holv 15 2>/dev/null | tr '\n' ' ')" = "1 2 Fizz 4 Buzz Fizz 7 8 Fizz Buzz 11 Fizz 13 14 FizzBuzz " ] && ok "fizzbuzz.holv prints the reference output at n=15" || bad "fizzbuzz.holv at n=15"
+[ "$($H run examples/sieve.holv 30 2>/dev/null | tr '\n' ' ')" = "10 13 17 19 23 29 " ] && ok "sieve.holv prints count and last five at n=30" || bad "sieve.holv at n=30"
 
 $H run examples/rank.holv 3 --simulate 2>/dev/null | grep -q '"effect":"Out.print"' && ok "simulate logs effects, prints nothing" || bad "simulate"
 
