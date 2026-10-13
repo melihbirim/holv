@@ -172,4 +172,4 @@ Published results: `bench/evidence/results-published/*.jsonl` (seven runs, every
 | 10-12 | sieve sample; red team round 2: simulate, DivisionByZero, depth limit, out-of-tree build |
 | 10-13 | red team round 3: Int, by the routine; boundary checks; outside review; archive |
 
-Commits: 46 by Claude Fable 5.1, 6 by Claude Sonnet 5.5 as the routine, 12 by Melih Birim (the first push and the merges). Issues filed: 49. Conformance files: 93. Red-team attempts: 27. Benchmark runs published: 7.
+Commits: 66 in all, 48 by Claude Fable 5.1, 6 by Claude Sonnet 5.5 as the routine, 12 by Melih Birim (the first push and the merges). Issues filed: 49. Conformance files: 93. Red-team attempts: 27. Benchmark runs published: 7.
