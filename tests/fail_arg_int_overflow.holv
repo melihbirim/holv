@@ -1,0 +1,6 @@
+holv 0
+
+-- expect: run-fail "error":"BadArgument"
+-- args: 9007199254740993
+-- an Int argument past 2^53 stops the program; Number() would round it to 9007199254740992 silently
+fn main(n: Int) -> Int { n }

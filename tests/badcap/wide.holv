@@ -1,0 +1,7 @@
+holv 0
+
+cap Num { wide(): Int, frac(): Int, text(): String }
+
+fn main(num: Num, which: Int) -> Int
+  effects Num
+{ if which == 0 { num.wide() } else { if which == 1 { num.frac() } else { num.text().len } } }
