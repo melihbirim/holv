@@ -1,0 +1,92 @@
+holv 0
+
+fn isNum(s: String) -> Bool
+{
+  var ok = s.len > 0
+  var i = 0
+  while i < s.len {
+    if not "0123456789".contains(s.charAt(i)) {
+      ok = false
+    }
+    i = i + 1
+  }
+  ok
+}
+
+fn toBig(s: String) -> Big
+{
+  var acc = big(0)
+  var i = 0
+  while i < s.len {
+    var d = 0
+    for j in 0 .. 10 {
+      if s.charAt(i) == str(j) {
+        d = j
+      }
+    }
+    acc = acc * big(10) + big(d)
+    i = i + 1
+  }
+  acc
+}
+
+cap Out { print(s: String): Unit }
+
+fn main(out: Out, s: String) -> Int
+  effects Out
+{
+  let qty: Map<String, Big> = Map.new()
+  let price: Map<String, Big> = Map.new()
+  var rejected = 0
+  let recs = s.split(";")
+  for k in 0 .. recs.len {
+    let p = recs[k].split(":")
+    if recs[k].len > 0 {
+      var ok = false
+      if p[0] == "add" and p.len == 4 {
+        if isNum(p[2]) and isNum(p[3]) {
+          let q = toBig(p[2])
+          if qty.has(p[1]) {
+            qty.set(p[1], qty.get(p[1]) + q)
+          } else {
+            qty.set(p[1], q)
+          }
+          price.set(p[1], toBig(p[3]))
+          ok = true
+        }
+      }
+      if p[0] == "remove" and p.len == 3 {
+        if isNum(p[2]) and qty.has(p[1]) {
+          let q = toBig(p[2])
+          if qty.get(p[1]) >= q {
+            qty.set(p[1], qty.get(p[1]) - q)
+            ok = true
+          }
+        }
+      }
+      if p[0] == "price" and p.len == 3 {
+        if isNum(p[2]) and qty.has(p[1]) {
+          price.set(p[1], toBig(p[2]))
+          ok = true
+        }
+      }
+      if p[0] == "report" and p.len == 1 {
+        ok = true
+        let names = qty.keys()
+        names.sortBy(fn(a, b) { if a < b { -1 } else { if a == b { 0 } else { 1 } } })
+        var total = big(0)
+        for i in 0 .. names.len {
+          let v = qty.get(names[i]) * price.get(names[i])
+          total = total + v
+          out.print(names[i] + " " + str(qty.get(names[i])) + " " + str(v))
+        }
+        out.print("total " + str(total))
+      }
+      if not ok {
+        rejected = rejected + 1
+      }
+    }
+  }
+  out.print("rejected " + str(rejected))
+  0
+}

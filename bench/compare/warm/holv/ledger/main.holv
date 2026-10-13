@@ -1,0 +1,73 @@
+holv 0
+
+fn isAmt(s: String) -> Bool
+{
+  var ok = s.len > 0 and s.len <= 15
+  var i = 0
+  while i < s.len {
+    if not "0123456789".contains(s.charAt(i)) {
+      ok = false
+    }
+    i = i + 1
+  }
+  ok and strToInt(s) > 0
+}
+
+cap Out { print(s: String): Unit }
+
+fn main(out: Out, s: String) -> Int
+  effects Out
+{
+  let bal: Map<String, Int> = Map.new()
+  var rejected = 0
+  let recs = s.split(";")
+  for k in 0 .. recs.len {
+    let p = recs[k].split(":")
+    if recs[k].len > 0 {
+      var ok = false
+      if p[0] == "deposit" and p.len == 3 {
+        if isAmt(p[2]) {
+          let a = strToInt(p[2])
+          if bal.has(p[1]) {
+            bal.set(p[1], bal.get(p[1]) + a)
+          } else {
+            bal.set(p[1], a)
+          }
+          ok = true
+        }
+      }
+      if p[0] == "withdraw" and p.len == 3 {
+        if isAmt(p[2]) and bal.has(p[1]) {
+          let a = strToInt(p[2])
+          if bal.get(p[1]) >= a {
+            bal.set(p[1], bal.get(p[1]) - a)
+            ok = true
+          }
+        }
+      }
+      if p[0] == "transfer" and p.len == 4 {
+        if isAmt(p[3]) and bal.has(p[1]) and p[1] != p[2] {
+          let a = strToInt(p[3])
+          if bal.get(p[1]) >= a {
+            bal.set(p[1], bal.get(p[1]) - a)
+            if bal.has(p[2]) {
+              bal.set(p[2], bal.get(p[2]) + a)
+            } else {
+              bal.set(p[2], a)
+            }
+            ok = true
+          }
+        }
+      }
+      if not ok {
+        rejected = rejected + 1
+      }
+    }
+  }
+  let names = bal.keys()
+  for i in 0 .. names.len {
+    out.print(names[i] + " " + str(bal.get(names[i])))
+  }
+  out.print("rejected " + str(rejected))
+  0
+}
