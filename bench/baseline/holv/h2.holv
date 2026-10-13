@@ -1,0 +1,8 @@
+holv 0
+cap Clock { now(): Int }
+fn pure(x: Int, c: Clock) -> Int {
+  c.now() + x
+}
+fn main() -> Int {
+  0
+}

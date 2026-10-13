@@ -18,6 +18,7 @@ const w = process.stdout.write.bind(process.stdout); process.stdout.write = () =
 globalThis.fetch = () => { t("fetch"); return Promise.reject(new Error("tripwire")); };
 const ph = process.hrtime; process.hrtime = new Proxy(ph, { apply() { t("hrtime"); return [0, 0]; } });
 performance.now = () => { t("performance.now"); return 0; };
+const RE = Event; globalThis.Event = class extends RE { constructor(...a) { t("Event"); super(...a); } };
 const req = createRequire(import.meta.url); const fs = req("node:fs");
 for (const k of ["readFileSync", "writeFileSync", "readdirSync", "existsSync"]) fs[k] = () => { t("fs." + k); return ""; };
 const m = await import(process.argv[2]);

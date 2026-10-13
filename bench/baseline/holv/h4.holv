@@ -1,0 +1,15 @@
+holv 0
+cap Clock { now(): Int }
+fn tick(c: Clock) -> Int
+  effects Clock
+{
+  c.now()
+}
+fn pure(x: Int, c: Clock) -> Int {
+  tick(c) + x
+}
+fn main(c: Clock) -> Int
+  effects Clock
+{
+  pure(1, c)
+}
