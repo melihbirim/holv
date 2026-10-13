@@ -33,19 +33,19 @@ const OVERFLOW_FIX = "Int is a 53-bit integer. If the value is needed, use Float
 export function ck(n: number, at: string): number {
   if (!Number.isSafeInteger(n))
     throw new RuntimeError("IntOverflow", `Int result ${n} is outside the safe range ±9007199254740991`, OVERFLOW_FIX, at);
-  return n;
+  return n || 0; // -0 is not an Int
 }
 // Binary Int arithmetic reports the operands, so an agent can see which input was already as large as it needed.
 export function ckOp(l: number, op: string, r: number, at: string): number {
   const n = op === "+" ? l + r : op === "-" ? l - r : l * r;
   if (!Number.isSafeInteger(n))
     throw new RuntimeError("IntOverflow", `${l} ${op} ${r} = ${n} is outside the safe Int range ±9007199254740991`, OVERFLOW_FIX, at);
-  return n;
+  return n || 0;
 }
 // Int and Big division: a zero divisor stops the program with a position, instead of NaN, Infinity or a bare RangeError.
 export function divmod<T extends number | bigint>(l: T, op: string, r: T, at: string): T {
   if (r == 0) throw new RuntimeError("DivisionByZero", `${l} ${op} ${r}: the divisor is zero`, "guard the divisor with 'if d != 0 { ... }' or fix the arithmetic that produced 0", at);
-  if (typeof l === "number" && typeof r === "number") return (op === "div" ? Math.trunc(l / r) : l % r) as T;
+  if (typeof l === "number" && typeof r === "number") return ((op === "div" ? Math.trunc(l / r) : l % r) || 0) as T;
   return (op === "div" ? (l as bigint) / (r as bigint) : (l as bigint) % (r as bigint)) as T;
 }
 // Call depth is counted, not left to the engine: the limit is the same on every target and in a dry run, so a recursion
@@ -65,12 +65,25 @@ export function toInt(b: bigint, at: string): number {
   return Number(b);
 }
 // String helpers that can fail do so loudly, with a position.
+// Everything that enters as an Int from outside the program is checked here: argv, HOLV_NOW, cap results.
+export function argInt(name: string, s: string, at?: string): number {
+  const v = s.trim();
+  if (!/^[+-]?\d+$/.test(v) || !Number.isSafeInteger(Number(v)))
+    throw new RuntimeError("BadArgument", `${name}: ${JSON.stringify(s)} is not an Int`, `pass a decimal integer within ±9007199254740991 for ${name}`, at);
+  return Number(v) || 0;
+}
+export function argFloat(name: string, s: string, at?: string): number {
+  const n = Number(s.trim());
+  if (s.trim() === "" || Number.isNaN(n))
+    throw new RuntimeError("BadArgument", `${name}: ${JSON.stringify(s)} is not a Float`, `pass a decimal number for ${name}`, at);
+  return n;
+}
 export function strToInt(s: string, at: string): number {
   const v = s.trim();
   if (!/^[+-]?\d+$/.test(v)) throw new RuntimeError("NotAnInt", `strToInt(${JSON.stringify(s)}): not an integer`, "check the string with a comparison first, or trim and validate the input before converting", at);
   const n = Number(v);
   if (!Number.isSafeInteger(n)) throw new RuntimeError("IntOverflow", `strToInt(${JSON.stringify(s)}) is outside the safe Int range`, "parse into a Big instead once a strToBig builtin exists, or reject the input", at);
-  return n;
+  return n || 0;
 }
 export function strAt(s: string, i: number, at: string): string {
   if (!Number.isInteger(i) || i < 0 || i >= s.length)
@@ -92,8 +105,10 @@ export function at<T>(xs: T[], i: number, at: string): T {
   return xs[i] as T;
 }
 // Every cap method call goes through here so a throwing implementation is reported at the holv call site.
-export function capCall<T>(name: string, at: string, f: () => T): T {
-  try { return f(); }
+// `ret` is the method's declared result type; a scalar result is checked, because the implementation is foreign code.
+export function capCall<T>(name: string, at: string, f: () => T, ret = ""): T {
+  let v: T;
+  try { v = f(); }
   catch (e) {
     // errors that already come from holv (a hole, a check, a nested cap) keep their own position
     if (e instanceof HoleReached) throw e;
@@ -101,6 +116,13 @@ export function capCall<T>(name: string, at: string, f: () => T): T {
     const msg = e instanceof Error ? e.message : String(e);
     throw new RuntimeError("CapabilityFailed", `${name} threw: ${msg}`, `the implementation of ${name} failed for these arguments; check the caps file that provides it, or the arguments at this call site`, at);
   }
+  const bad = (want: string) => new RuntimeError("BadCapResult", `${name} returned ${json(v)} where the cap declares ${want}`, `fix the implementation of ${name} in the caps file so it returns a ${want}, or declare the method's result as the type it really returns`, at);
+  if (ret === "Int") { if (!Number.isSafeInteger(v)) throw bad("Int"); return ((v as number) || 0) as T; }
+  if (ret === "Float" && typeof v !== "number") throw bad("Float");
+  if (ret === "Big" && typeof v !== "bigint") throw bad("Big");
+  if (ret === "String" && typeof v !== "string") throw bad("String");
+  if (ret === "Bool" && typeof v !== "boolean") throw bad("Bool");
+  return v;
 }
 
 export function runExamples(exs: Array<[string, () => unknown, unknown]>): boolean {
@@ -119,8 +141,8 @@ export function runExamples(exs: Array<[string, () => unknown, unknown]>): boole
 export type Impl = { real: () => object; dry: () => object };
 const registry: Record<string, Impl> = {
   Clock: {
-    real: () => ({ now: () => (process.env.HOLV_NOW ? Number(process.env.HOLV_NOW) : Math.floor(Date.now() / 1000)) }),
-    dry: () => ({ now: () => Number(process.env.HOLV_NOW ?? 1_700_000_000) }),
+    real: () => ({ now: () => (process.env.HOLV_NOW ? argInt("HOLV_NOW", process.env.HOLV_NOW) : Math.floor(Date.now() / 1000)) }),
+    dry: () => ({ now: () => (process.env.HOLV_NOW ? argInt("HOLV_NOW", process.env.HOLV_NOW) : 1_700_000_000) }),
   },
   Rng: {
     real: () => lcg(Number(process.env.HOLV_SEED ?? 42)),

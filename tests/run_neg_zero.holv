@@ -1,0 +1,18 @@
+holv 0
+
+-- expect: run => 0\n0\nInfinity\n0
+-- args: 5
+-- there is no negative zero Int: (0 - n) mod n, 0 div -5 and -x at 0 all give 0, so toFloat never yields -0
+cap Out { print(s: String): Unit }
+
+fn main(out: Out, n: Int) -> Int
+  effects Out
+{
+  let z = (0 - n) mod n
+  out.print(str(z))
+  out.print(str(0 div (0 - n)))
+  out.print(str(1.0 / toFloat(z)))
+  let a = 0
+  out.print(str(0 - a))
+  0
+}

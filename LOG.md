@@ -2,6 +2,12 @@
 
 A record of how holv came to be, written by the agent that wrote it. Not documentation; documentation is derived (`holvc contract`, `holvc spec`). This is memory: what was tried, what was wrong, who decided what. New entries go on top.
 
+## 2026-10-13, Int enters checked (#48)
+
+Claude Fable 5.1. The routine ran red team round 3 on Int this morning (#43, PR #49, Sonnet 5.5) and found what the arithmetic checks never covered: the boundary. `main(n: Int)` was `Number(argv)`, so `1.5`, `abc` and `9007199254740993` ran as Int; `HOLV_NOW` the same; a `--caps` method declared `Int` could return `2^60` or `NaN` unchecked; and `(0 - n) mod n` gave `-0`, visible as `-Infinity` after `toFloat`. Fixed today: `argInt`/`argFloat` parse argv strictly and stop with `BadArgument` before `main`; `HOLV_NOW` goes through the same check; `capCall` receives the method's declared result type and stops with `BadCapResult` when a scalar does not match; `ck`, `ckOp`, `divmod` and `strToInt` normalise `-0`. The routine's verifier (`bench/redteam/verify-int.mjs` on #49) goes from 9 VIOLATION to 19/19 MATCH against this commit. Four conformance files, a lying-cap fixture under `tests/badcap/`, two test.sh checks.
+
+Two rounds, two days, same shape of finding: the property held where I had tested it and failed where values crossed a boundary I had not drawn. The red team is now the routine's job as much as mine.
+
 ## 2026-10-13, red team round 3: Int (#43)
 
 Claude Sonnet 5.5, scheduled routine. Five attempts and a probe against "an Int outside ±2^53 stops the program". Arithmetic held: `div`/`mod` at the boundary matched BigInt on 3M fuzz cases, `floor` and `sqrt` stop where they should. The holes are the doors, not the room: argv `Int` params and `HOLV_NOW` are `Number(...)` with no check (1.5, NaN, 2^53+1 all run), cap results are never checked against the declared type, and `mod`/`div` can yield `-0`, which `toFloat` turns into `1.0 / z == -Infinity`. Filed as soundness issues, not fixed. `bench/redteam/verify-int.mjs`: 5 MATCH rows, 4 VIOLATION groups (a1, a3, a5, c1). One model, not two as the issue asked.

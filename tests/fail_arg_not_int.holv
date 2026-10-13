@@ -1,0 +1,6 @@
+holv 0
+
+-- expect: run-fail "error":"BadArgument"
+-- args: 1.5
+-- an Int argument that is not a decimal integer stops the program before main runs; Number("1.5") never becomes an Int
+fn main(n: Int) -> Int { n }

@@ -31,6 +31,11 @@ $H caps verify tests/caps/bad 2>&1 | grep -q '"code":"C002"' && ok "caps verify 
 tmpd=$(mktemp -d) && cp examples/fib.holv "$tmpd/" && [ "$($H run "$tmpd/fib.holv" 10 2>/dev/null)" = "fib(10) = 55" ] && ok "build: a .holv outside a package.json tree runs" || bad "a .holv outside a package.json tree should build; got: $($H run "$tmpd/fib.holv" 10 2>&1 | head -1)"
 rm -rf "$tmpd"
 
+# Ints that enter from outside are checked at the boundary (#48): a cap result against its declared type, HOLV_NOW as an Int
+n=0; for w in 0 1 2; do $H run tests/badcap/wide.holv $w --caps tests/badcap/caps.ts 2>&1 | grep -q '"error":"BadCapResult"' && n=$((n+1)); done
+[ $n -eq 3 ] && ok "a cap result outside its declared type stops with BadCapResult (Int too wide, fractional, wrong type)" || bad "tests/badcap/wide.holv: expected BadCapResult three times, got $n"
+HOLV_NOW=abc $H run examples/rank.holv 3 2>&1 | grep -q '"error":"BadArgument"' && ok "HOLV_NOW that is not an Int stops with BadArgument" || bad "HOLV_NOW=abc should stop with BadArgument"
+
 # every file that is expected to compile is committed in canonical form
 fmtfail=0
 for f in examples/*.holv examples/npm/*.holv tests/ok_*.holv tests/run_*.holv tests/hole_*.holv tests/examples_*.holv tests/fail_*.holv; do
