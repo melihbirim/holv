@@ -24,6 +24,9 @@ $H caps verify >/dev/null 2>&1 && ok "caps verify: manifests match package.json,
 $H caps verify tests/caps/ok >/dev/null 2>&1 && ok "caps verify reads a caps.ts with a top-level throw without running it" || bad "caps verify must not execute caps.ts; run: ./holvc.mjs caps verify tests/caps/ok"
 $H caps verify tests/caps/bad 2>&1 | grep -q '"code":"C002"' && ok "caps verify rejects a dynamically built wrapper with C002" || bad "caps verify should report C002 for tests/caps/bad"
 
+$H run tests/sandbox/peek.holv /etc/hosts --caps tests/sandbox/caps.ts >/dev/null 2>&1 && $H run tests/sandbox/peek.holv /etc/hosts --caps tests/sandbox/caps.ts --sandbox 2>&1 | grep -q 'restricted' && ok "--sandbox: a cap reading outside the project is refused" || bad "--sandbox should refuse fs.readFileSync outside the project"
+$H run tests/sandbox/peek.holv tests/sandbox/peek.holv --caps tests/sandbox/caps.ts --sandbox >/dev/null 2>&1 && ok "--sandbox: a read inside the project is allowed" || bad "--sandbox should allow reads inside the project"
+
 # --simulate prints the plan on every exit path: effects made before a crash or a hole are not lost (red team round 2)
 [ "$($H run tests/fail_crash_after_effects.holv 5 --simulate 2>/dev/null | grep -c '"effect":"Out.print"')" = "2" ] && ok "--simulate: plan is printed after a crash, with the effects made before it" || bad "--simulate must print the plan when the program crashes"
 
@@ -38,7 +41,7 @@ HOLV_NOW=abc $H run examples/rank.holv 3 2>&1 | grep -q '"error":"BadArgument"' 
 
 # every file that is expected to compile is committed in canonical form
 fmtfail=0
-for f in examples/*.holv examples/npm/*.holv tests/ok_*.holv tests/run_*.holv tests/hole_*.holv tests/examples_*.holv tests/fail_*.holv; do
+for f in examples/*.holv examples/npm/*.holv tests/ok_*.holv tests/sandbox/*.holv tests/run_*.holv tests/hole_*.holv tests/examples_*.holv tests/fail_*.holv; do
   $H fmt "$f" --check >/dev/null 2>&1 || { fmtfail=1; echo "     not canonical: $f"; }
 done
 [ $fmtfail -eq 0 ] && ok "fmt --check: committed files are canonical" || bad "fmt --check; run: ./holvc.mjs fmt <file> --write"

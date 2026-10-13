@@ -67,6 +67,7 @@ pnpm install            # only for tsc
 ./holvc.mjs test examples/rank.holv           # run `example` lines
 ./holvc.mjs contract examples/rank.holv       # the program's contract, derived from its signatures
 ./holvc.mjs run examples/npm/slug.holv "Hello World" --caps slugify   # an npm package behind a reviewed cap from caps/
+./holvc.mjs run examples/npm/slug.holv "Hello World" --caps slugify --sandbox   # same, under Node's permission model
 ./holvc.mjs fmt examples/rank.holv --write
 ./holvc.mjs fix examples/bad.holv              # apply the mechanical fixes from check output, then fmt
 ./test.sh                                     # every tests/*.holv conformance file plus integration checks
@@ -81,6 +82,14 @@ What a rejected file looks like ([tests/err_multiple_in_one_file.holv](tests/err
 ```
 
 Runtime errors are JSON with the same shape and exit 4, never a stack trace.
+
+## Foreign code
+
+`cap` is a naming boundary, not a sandbox. On the JS target a loaded npm package runs with the full authority of the Node process; the `Caps` proxy sees calls into the package, not what the package does. What helps:
+
+- Install: exact version pins, a committed lockfile, `ignore-scripts=true` in `.npmrc` (no lifecycle scripts), `holvc caps verify` parses wrappers and never runs them.
+- Run: `holvc run --sandbox` uses Node's permission model: fs reads limited to the project, no fs writes, no child processes, no workers. The network stays open; Node's model does not cover it. It refuses to run on a Node without `--permission`.
+- Containment proper (workers #13, WASM #15) is future work. Until then the JS target is for development and ecosystem, not for containment.
 
 ## Against other languages
 

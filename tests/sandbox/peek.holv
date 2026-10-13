@@ -1,0 +1,12 @@
+holv 0
+
+cap Peek { peek(path: String): String }
+
+cap Out { print(s: String): Unit }
+
+fn main(peek: Peek, out: Out, path: String) -> Int
+  effects Peek, Out
+{
+  out.print(peek.peek(path))
+  0
+}
