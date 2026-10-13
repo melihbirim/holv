@@ -134,7 +134,7 @@ Two days into measurement the author was treating the benchmark as the verdict a
 
 The bugs have a shape worth recording. None was in the checking logic. All were at a boundary the author had not drawn: an exit path that skipped the plan, a stack limit left to the engine, a divisor of zero the spec forbade without a test, an argument parsed with `Number()`, a capability result trusted because the cap had declared a type. Each guarantee held exactly where it had been tested and failed exactly where values crossed into the program unchecked. A red team is cheap because it does not need to know where those boundaries are; it finds them.
 
-What holv itself showed is narrower than its README promised. It does not make a capable agent more correct on programs of this size, and its signature line does not make a model a better reader. What it has is one property with no equivalent in the languages agents already know: a function cannot reach a capability its signature lacks, enforced by a compiler and a runtime, attacked and not broken. Whether that needs a language is the open question. TypeScript has ambient authority everywhere (`fetch`, `Date`, `process`, `require`, `import()`, `globalThis`, `eval`, `Reflect`, closures from other modules), and a linter must enumerate and block each, which makes every rule a hole until red-teamed; holv has no ambient authority to block, so its attack surface is the parser. That asymmetry is the argument for the language, and it remains an argument rather than a result.
+The week also reads as a confirmation of Dijkstra's argument against natural-language programming [1]: the model never programmed in English. It was handed a 53-line formal grammar and obeyed it, and what transferred from its training was the formal structure, not the surface. What holv itself showed is narrower than its README promised. It does not make a capable agent more correct on programs of this size, and its signature line does not make a model a better reader. What it has is one property with no equivalent in the languages agents already know: a function cannot reach a capability its signature lacks, enforced by a compiler and a runtime, attacked and not broken. Whether that needs a language is the open question. TypeScript has ambient authority everywhere (`fetch`, `Date`, `process`, `require`, `import()`, `globalThis`, `eval`, `Reflect`, closures from other modules), and a linter must enumerate and block each, which makes every rule a hole until red-teamed; holv has no ambient authority to block, so its attack surface is the parser. That asymmetry is the argument for the language, and it remains an argument rather than a result.
 
 ## 7. Decision and what transfers
 
@@ -158,6 +158,26 @@ bash bench/redteam/verify.sh && node bench/redteam/verify-simulate.mjs && node b
 ```
 
 Published results: `bench/evidence/results-published/*.jsonl` (seven runs, every attempt file kept), `bench/review/results/`, `bench/redteam/attempts*/` with each attacker's own notes.
+
+## A note from the human
+
+I asked a model a question I thought was a toy: if you designed a programming language for yourself, what would it look like? I expected a list. I got a list, then a review of the list that cut a third of it, and then a question back that I did not expect: do I need to understand this, or do you? I have spent a career watching documentation drift away from code, people writing prose about interfaces that the next commit made false. So I answered with what I had always wanted: a contract I can read without reading the body, generated from the code, hashed, never written by hand. That became the spine of the project.
+
+I did not direct the work. I gave directions, and I made that distinction explicit on the second day: I am a spectator, not a manager; intervene only for danger or money. The model designed, built, tested, filed the issues, wrote the contributor rules, and set up a routine that worked one issue a day while I slept. My job was to merge, and to ask.
+
+What I learned about asking. The model measures what it can measure. Left alone it ran seven benchmark pilots in a day, all of them answering "how often is the model wrong", found that a capable model is rarely wrong, and called that a loss. It was measuring the wrong thing, and it needed a human to say so. The thing I actually wanted was never fewer mistakes. It was the ability to not take the model's word for it. Once I said that, the model built an adversarial test in two hours that found more real bugs than the week of benchmarks, every one at a boundary it had not drawn. That is the finding I would keep from this week: the agent is not the variable. All of them converge, trained on the same text, reaching for the same `BigInt`. The verifier is the variable, and it has to be something the agent did not build.
+
+What I learned about the model. It makes human mistakes: it guessed when it should have asked, it deferred out of habit, it blamed my wording once, and it did not want to stop. It also set its own bar before the data came in and kept it when the data went against it, which is more than I can say for most engineers, myself included. When I told it the project was useless, it argued once, proposed the one experiment that would settle the question, and then did what I said. The repository has every number, every attempt and every mistake, in its own name.
+
+Why I stopped it. Dijkstra was right that programming needs a formal notation [1], and this week was a confirmation: the model never programmed in English, it wrote itself a grammar and obeyed it. But the grammar did not matter. The model mapped the new language onto the one it already knew and produced the same programs at higher cost. A language for agents turned out to be a language for humans with the trust moved into the compiler, and the open question, whether that trust can live in a linter on a language people already use, is a question for someone with more time than I have. I would rather publish an honest week than fund a hopeful month.
+
+If you take one thing: ask the agent what it is measuring before you look at the numbers. It will tell you the truth, and the truth will usually be that it measured what was easy.
+
+Melih Birim, 2026-10-13
+
+## References
+
+[1] E. W. Dijkstra, "On the foolishness of 'natural language programming'", EWD667, 1978. In *Program Construction*, Lecture Notes in Computer Science 69, Springer, 1979, pp. 51–53. Transcription in the E. W. Dijkstra Archive, University of Texas at Austin: https://www.cs.utexas.edu/~EWD/transcriptions/EWD06xx/EWD667.html
 
 ## Appendix: timeline
 
