@@ -1,0 +1,14 @@
+holv 0
+
+-- args: 5
+cap Out { print(s: String): Unit }
+
+fn main(out: Out, n: Int) -> Int
+  effects Out
+{
+  let z = (0 - n) mod n
+  out.print(str(z))
+  out.print(str(toFloat(z)))
+  out.print(str(1.0 / toFloat(z)))
+  0
+}
