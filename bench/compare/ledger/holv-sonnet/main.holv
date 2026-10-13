@@ -1,0 +1,82 @@
+holv 0
+
+cap Out { print(s: String): Unit }
+
+fn parseAmt(s: String) -> Int {
+  var ok = s.len > 0
+  var start = 0
+  for i in 0 .. s.len {
+    if not "0123456789".contains(s.charAt(i)) {
+      ok = false
+    }
+  }
+  if ok {
+    while start < s.len and s.charAt(start) == "0" {
+      start = start + 1
+    }
+  }
+  if ok and start < s.len and s.len - start <= 15 {
+    strToInt(s.slice(start, s.len))
+  } else {
+    -1
+  }
+}
+
+fn main(out: Out, log: String) -> Int
+  effects Out
+{
+  let m: Map<String, Int> = Map.new()
+  var rej = 0
+  let limit = 9007199254740991
+  let recs = log.split(";")
+  for i in 0 .. recs.len {
+    let r = recs[i]
+    if r.len > 0 {
+      let f = r.split(":")
+      var good = false
+      if f.len == 3 and (f[0] == "deposit" or f[0] == "withdraw") {
+        let a = parseAmt(f[2])
+        let nm = f[1]
+        let bal = if m.has(nm) { m.get(nm) } else { 0 }
+        if a > 0 {
+          if f[0] == "deposit" {
+            if a <= limit - bal {
+              m.set(nm, bal + a)
+              good = true
+            }
+          } else {
+            if m.has(nm) and bal >= a {
+              m.set(nm, bal - a)
+              good = true
+            }
+          }
+        }
+      }
+      if f.len == 4 and f[0] == "transfer" {
+        let a = parseAmt(f[3])
+        let from = f[1]
+        let to = f[2]
+        if a > 0 and from != to and m.has(from) {
+          let fb = m.get(from)
+          if fb >= a {
+            let tb = if m.has(to) { m.get(to) } else { 0 }
+            if a <= limit - tb {
+              m.set(from, fb - a)
+              m.set(to, tb + a)
+              good = true
+            }
+          }
+        }
+      }
+      if not good {
+        rej = rej + 1
+      }
+    }
+  }
+  let ks = m.keys()
+  for i in 0 .. ks.len {
+    out.print(ks[i] + " " + str(m.get(ks[i])))
+  }
+  out.print("rejected " + str(rej))
+  0
+}

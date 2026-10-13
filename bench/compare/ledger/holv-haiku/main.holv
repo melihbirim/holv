@@ -1,0 +1,149 @@
+holv 0
+
+cap Out {
+  print(s: String): Unit
+}
+
+-- true when s is one or more ASCII digits
+fn isDigits(s: String) -> Bool
+{
+  var ok = s.len > 0
+  for i in 0 .. s.len {
+    if not "0123456789".contains(s.charAt(i)) {
+      ok = false
+    }
+  }
+  ok
+}
+
+-- exact value of a string of digits (no Int overflow limit)
+fn parseAmount(s: String) -> Big
+{
+  var n = big(0)
+  for i in 0 .. s.len {
+    n = n * big(10) + big(strToInt(s.charAt(i)))
+  }
+  n
+}
+
+-- a positive integer written in digits
+fn isAmount(s: String) -> Bool
+{
+  if isDigits(s) {
+    parseAmount(s) > big(0)
+  } else {
+    false
+  }
+}
+
+fn doDeposit(bal: Map<String, Big>, name: String, amt: String) -> Bool
+{
+  if isAmount(amt) {
+    let a = parseAmount(amt)
+    if bal.has(name) {
+      bal.set(name, bal.get(name) + a)
+    } else {
+      bal.set(name, a)
+    }
+    true
+  } else {
+    false
+  }
+}
+
+fn doWithdraw(bal: Map<String, Big>, name: String, amt: String) -> Bool
+{
+  if isAmount(amt) and bal.has(name) {
+    let a = parseAmount(amt)
+    if bal.get(name) >= a {
+      bal.set(name, bal.get(name) - a)
+      true
+    } else {
+      false
+    }
+  } else {
+    false
+  }
+}
+
+fn doTransfer(bal: Map<String, Big>, from: String, to: String, amt: String) -> Bool
+{
+  if isAmount(amt) and bal.has(from) and from != to {
+    let a = parseAmount(amt)
+    if bal.get(from) >= a {
+      bal.set(from, bal.get(from) - a)
+      if bal.has(to) {
+        bal.set(to, bal.get(to) + a)
+      } else {
+        bal.set(to, a)
+      }
+      true
+    } else {
+      false
+    }
+  } else {
+    false
+  }
+}
+
+-- applies one split record; returns false when it is rejected (state unchanged)
+fn applyRecord(bal: Map<String, Big>, p: List<String>) -> Bool
+{
+  if p[0] == "deposit" {
+    if p.len == 3 {
+      doDeposit(bal, p[1], p[2])
+    } else {
+      false
+    }
+  } else {
+    if p[0] == "withdraw" {
+      if p.len == 3 {
+        doWithdraw(bal, p[1], p[2])
+      } else {
+        false
+      }
+    } else {
+      if p[0] == "transfer" {
+        if p.len == 4 {
+          doTransfer(bal, p[1], p[2], p[3])
+        } else {
+          false
+        }
+      } else {
+        false
+      }
+    }
+  }
+}
+
+fn report(input: String) -> List<String>
+{
+  let bal: Map<String, Big> = Map.new()
+  var rejected = 0
+  let recs = input.split(";")
+  for i in 0 .. recs.len {
+    let r = recs[i]
+    if r.len > 0 {
+      if not applyRecord(bal, r.split(":")) {
+        rejected = rejected + 1
+      }
+    }
+  }
+  var lines: List<String> = List.new()
+  let names = bal.keys()
+  for i in 0 .. names.len {
+    lines.push(names[i] + " " + str(bal.get(names[i])))
+  }
+  lines.push("rejected " + str(rejected))
+  lines
+}
+
+fn main(out: Out, log: String) -> Int
+  effects Out
+{
+  let lines = report(log)
+  for i in 0 .. lines.len {
+    out.print(lines[i])
+  }
+  0
+}

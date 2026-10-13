@@ -1,0 +1,97 @@
+holv 0
+cap Out { print(s: String): Unit }
+fn digitVal(c: String) -> Int
+{
+  var r = -1
+  for i in 0 .. 10 {
+    if "0123456789".charAt(i) == c {
+      r = i
+    }
+  }
+  r
+}
+fn validAmount(s: String) -> Bool
+{
+  var ok = s.len > 0
+  var nonzero = false
+  for i in 0 .. s.len {
+    let d = digitVal(s.charAt(i))
+    if d < 0 {
+      ok = false
+    }
+    if d > 0 {
+      nonzero = true
+    }
+  }
+  ok and nonzero
+}
+fn parseAmount(s: String) -> Big
+{
+  var v = big(0)
+  for i in 0 .. s.len {
+    v = v * big(10) + big(digitVal(s.charAt(i)))
+  }
+  v
+}
+fn main(out: Out, log: String) -> Int
+  effects Out
+{
+  let m: Map<String, Big> = Map.new()
+  var rejected = 0
+  let recs = log.split(";")
+  for i in 0 .. recs.len {
+    let r = recs[i]
+    if r.len > 0 {
+      let f = r.split(":")
+      var ok = false
+      let cmd = f[0]
+      if cmd == "deposit" and f.len == 3 {
+        if validAmount(f[2]) {
+          let a = parseAmount(f[2])
+          if m.has(f[1]) {
+            m.set(f[1], m.get(f[1]) + a)
+          } else {
+            m.set(f[1], a)
+          }
+          ok = true
+        }
+      }
+      if cmd == "withdraw" and f.len == 3 {
+        if validAmount(f[2]) {
+          let a = parseAmount(f[2])
+          if m.has(f[1]) {
+            if m.get(f[1]) >= a {
+              m.set(f[1], m.get(f[1]) - a)
+              ok = true
+            }
+          }
+        }
+      }
+      if cmd == "transfer" and f.len == 4 {
+        if validAmount(f[3]) and f[1] != f[2] {
+          let a = parseAmount(f[3])
+          if m.has(f[1]) {
+            if m.get(f[1]) >= a {
+              m.set(f[1], m.get(f[1]) - a)
+              if m.has(f[2]) {
+                m.set(f[2], m.get(f[2]) + a)
+              } else {
+                m.set(f[2], a)
+              }
+              ok = true
+            }
+          }
+        }
+      }
+      if not ok {
+        rejected = rejected + 1
+      }
+    }
+  }
+  let ks = m.keys()
+  for i in 0 .. ks.len {
+    out.print(ks[i] + " " + str(m.get(ks[i])))
+  }
+  out.print("rejected " + str(rejected))
+  0
+}
