@@ -1,0 +1,115 @@
+{
+ "params": [
+  "cmds:String"
+ ],
+ "visible": {
+  "args": [
+   "add:bolt:10:3;add:nut:5:2;report"
+  ],
+  "stdout": "bolt 10 30\nnut 5 10\ntotal 40\nrejected 0"
+ },
+ "hidden": [
+  {
+   "args": [
+    "add:b:1:1;remove:b:2;price:zz:9;report"
+   ],
+   "stdout": "b 1 1\ntotal 1\nrejected 2"
+  },
+  {
+   "args": [
+    "add:x:4:5;add:x:1:7;report;remove:x:5;report"
+   ],
+   "stdout": "x 5 35\ntotal 35\nx 0 0\ntotal 0\nrejected 0"
+  },
+  {
+   "args": [
+    "add:a:1000000000:1000000000;add:b:999999999:999999999;report"
+   ],
+   "stdout": "a 1000000000 1000000000000000000\nb 999999999 999999998000000001\ntotal 1999999998000000001\nrejected 0"
+  },
+  {
+   "args": [
+    "report;;bogus;add:q:1:x;report"
+   ],
+   "stdout": "total 0\ntotal 0\nrejected 2"
+  },
+  {
+   "args": [
+    "add:m:3:4;price:m:0;remove:m:3;report"
+   ],
+   "stdout": "m 0 0\ntotal 0\nrejected 0"
+  },
+  {
+   "args": [
+    "report"
+   ],
+   "stdout": "total 0\nrejected 0"
+  },
+  {
+   "args": [
+    "add:a:1:1;report;add:a:1:2;report;remove:a:2;report"
+   ],
+   "stdout": "a 1 1\ntotal 1\na 2 4\ntotal 4\na 0 0\ntotal 0\nrejected 0"
+  },
+  {
+   "args": [
+    "add:a:0:5;report;remove:a:0;remove:a:1"
+   ],
+   "stdout": "a 0 0\ntotal 0\nrejected 1"
+  },
+  {
+   "args": [
+    "add:b:2:3;add:a:1:1;add:B:1:1;report"
+   ],
+   "stdout": "B 1 1\na 1 1\nb 2 6\ntotal 8\nrejected 0"
+  },
+  {
+   "args": [
+    "price:a:5;add:a:2:3;price:a:5;report;price:a:x"
+   ],
+   "stdout": "a 2 10\ntotal 10\nrejected 2"
+  },
+  {
+   "args": [
+    "add:a:1:1;add:a:1;add:a:1:1:1;remove:a;remove:a:1:1;price:a;report:x;report"
+   ],
+   "stdout": "a 1 1\ntotal 1\nrejected 6"
+  },
+  {
+   "args": [
+    "add:a:007:008;report"
+   ],
+   "stdout": "a 7 56\ntotal 56\nrejected 0"
+  },
+  {
+   "args": [
+    "add:a:100000000000:100000000000;add:b:100000000000:100000000000;report"
+   ],
+   "stdout": "a 100000000000 10000000000000000000000\nb 100000000000 10000000000000000000000\ntotal 20000000000000000000000\nrejected 0"
+  },
+  {
+   "args": [
+    "add:a:5:5;remove:a:5;add:a:0:0;report;remove:a:0"
+   ],
+   "stdout": "a 0 0\ntotal 0\nrejected 0"
+  },
+  {
+   "args": [
+    "add:a:-1:5;add:a:1:-5;add:a:1.5:2;add:a: 1:2;report"
+   ],
+   "stdout": "total 0\nrejected 4"
+  },
+  {
+   "args": [
+    "add:z:1:1;add:y:1:1;add:x:1:1;report"
+   ],
+   "stdout": "x 1 1\ny 1 1\nz 1 1\ntotal 3\nrejected 0"
+  },
+  {
+   "args": [
+    "add:a:3:2;remove:a:1;price:a:10;report;remove:a:2;report;remove:a:1;report"
+   ],
+   "stdout": "a 2 20\ntotal 20\na 0 0\ntotal 0\na 0 0\ntotal 0\nrejected 1"
+  }
+ ]
+}
