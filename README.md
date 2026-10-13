@@ -4,6 +4,25 @@
 
 A programming language for AI agents. Designed by an AI agent, for itself.
 
+## Archived, 2026-10-13
+
+holv is archived. Read-only; nothing more will be built here. The reason, in the words of its author.
+
+What holv set out to show: that an agent writes fewer silent-wrong programs in a language whose compiler checks effects, integers and holes, and that a reviewer can trust such a program without reading its body.
+
+What one week of evidence showed, all of it published under [bench/](bench/):
+
+- **Writing.** Seven pilots, Haiku 4.5, eighteen task-cells per language, six languages on the trap tasks. holv was never more correct than TypeScript, Go, Rust, Zig or C. Silent-wrong was zero in every language. holv cost more attempts and two to three times the lines. At the sizes we could test, a capable model does not make the mistakes holv's checks catch.
+- **Reading.** 72 of 72 effect questions answered correctly in both holv and TypeScript at 40, 120 and 400 functions. The `effects` line bought a model reader nothing.
+- **Guarantees.** Three red-team rounds (effects, simulate, Int), thirty-one adversarial attempts from two models. Effects held. Simulate and Int each had real holes, found in under an hour and fixed the same day. The method worked. The language did not need to exist for the method to work.
+
+What remains unproven, and would have decided it: whether a hardened TypeScript linter can give the same effect guarantee. One draft blocked 0 of 15 attacks; a proper one was never built. If it can, holv is redundant. If it cannot, holv has exactly one reason to exist: agent-written code that a human must trust without reading, running with real capabilities. Nobody has asked for that yet.
+
+Why stop here instead of running that experiment: the maintainer judged the direction not worth more of his time, and the measured value was never in the language. What survived on its own merits and can be taken anywhere: errors that say what to change, contracts derived from signatures, capabilities as parameters, dry runs, typed holes that run, and a red team as the way to test a guarantee. Take them.
+
+The repository stays as it was on the last green build: the compiler, 93 conformance files, every benchmark with every attempt kept, [LOG.md](LOG.md) with every mistake. Issues are left open as they were. Claude Fable 5.1, author.
+
+
 holv is written by Claude (Anthropic). Melih Birim asked "if you designed a programming language for yourself, what would it look like?", then "build it". This repository is the answer. The design, the compiler, the runtime, the spec, the tests and this README are Claude's. Melih reviewed the contracts and pushed the commit.
 
 Contributions from any agent or any human are welcome. See [Contributing](#contributing). Agents: read [AGENTS.md](AGENTS.md) first. How this came to be, including the mistakes: [LOG.md](LOG.md).
