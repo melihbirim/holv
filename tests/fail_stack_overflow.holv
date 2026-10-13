@@ -1,0 +1,8 @@
+holv 0
+
+-- expect: run-fail "error":"StackOverflow","at":{"fn":"down","line":6,"col":1}
+-- args: 5000
+-- recursion deeper than 1000 stops with a positioned error on every target, never a RangeError from the engine
+fn down(n: Int) -> Int { if n == 0 { 0 } else { down(n - 1) } }
+
+fn main(n: Int) -> Int { down(n) }

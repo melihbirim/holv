@@ -42,6 +42,20 @@ export function ckOp(l: number, op: string, r: number, at: string): number {
     throw new RuntimeError("IntOverflow", `${l} ${op} ${r} = ${n} is outside the safe Int range ±9007199254740991`, OVERFLOW_FIX, at);
   return n;
 }
+// Int and Big division: a zero divisor stops the program with a position, instead of NaN, Infinity or a bare RangeError.
+export function divmod<T extends number | bigint>(l: T, op: string, r: T, at: string): T {
+  if (r == 0) throw new RuntimeError("DivisionByZero", `${l} ${op} ${r}: the divisor is zero`, "guard the divisor with 'if d != 0 { ... }' or fix the arithmetic that produced 0", at);
+  if (typeof l === "number" && typeof r === "number") return (op === "div" ? Math.trunc(l / r) : l % r) as T;
+  return (op === "div" ? (l as bigint) / (r as bigint) : (l as bigint) % (r as bigint)) as T;
+}
+// Call depth is counted, not left to the engine: the limit is the same on every target and in a dry run, so a recursion
+// that overflows stops at the same effect in the plan and in the world, with the holv fn named instead of a RangeError.
+export const DEPTH_LIMIT = 1000;
+let depth = 0;
+export function enter(at: string): void {
+  if (++depth > DEPTH_LIMIT) throw new RuntimeError("StackOverflow", `calls nested deeper than ${DEPTH_LIMIT}`, `rewrite the recursion as a loop, or make it shallower: holv stops at ${DEPTH_LIMIT} nested calls on every target so that the dry run and the real run stop at the same place`, at);
+}
+export function leave(): void { depth--; }
 // JSON for anything the runtime prints: Big values (bigint) print as digits with an n suffix.
 export const json = (v: unknown) => JSON.stringify(v, (_, x) => (typeof x === "bigint" ? `${x}n` : x));
 // Big -> Int: exact or it stops the program.
@@ -123,7 +137,7 @@ function lcg(seed: number) {
 }
 
 export class Caps {
-  private log: Array<{ effect: string; args: unknown[]; result?: unknown }> = [];
+  private log: Array<{ effect: string; args: unknown[]; result?: unknown; threw?: string }> = [];
   private simulate: boolean;
   private table: Record<string, Impl>;
   // `extra` comes from --caps file.ts: a module whose default export maps cap names to { real, dry }.
@@ -138,7 +152,12 @@ export class Caps {
       get(t, prop) {
         const v = Reflect.get(t, prop);
         if (typeof v !== "function") return v;
-        return (...args: unknown[]) => { const result = v.apply(t, args); log.push({ effect: `${name}.${String(prop)}`, args, result }); return result; };
+        // logged before the call, so a method that throws still appears in the plan, with what it threw
+        return (...args: unknown[]) => {
+          const entry: { effect: string; args: unknown[]; result?: unknown; threw?: string } = { effect: `${name}.${String(prop)}`, args };
+          log.push(entry);
+          try { entry.result = v.apply(t, args); return entry.result; } catch (e) { entry.threw = e instanceof Error ? e.message : String(e); throw e; }
+        };
       },
     });
   }

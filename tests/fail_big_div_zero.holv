@@ -1,0 +1,9 @@
+holv 0
+
+-- expect: run-fail "error":"DivisionByZero","at":{"fn":"main","line":7,"col":18}
+-- args: 7
+-- Big division by zero is positioned like the Int case, not a bare RangeError from the JS engine
+fn main(n: Int) -> Int {
+  let q = big(n) div big(0)
+  toInt(q)
+}

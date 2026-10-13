@@ -1,0 +1,16 @@
+holv 0
+
+-- expect: run-fail "error":"IndexOutOfRange"
+-- args: 5
+-- test.sh also runs this under --simulate: the two prints before the crash must appear in the plan
+cap Out { print(s: String): Unit }
+
+fn main(out: Out, x: Int) -> Int
+  effects Out
+{
+  out.print("one")
+  out.print("two")
+  let xs: List<Int> = List.new()
+  out.print(str(xs[x]))
+  0
+}

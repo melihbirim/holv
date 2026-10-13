@@ -1,0 +1,26 @@
+holv 0
+cap Clock { now(): Int }
+cap Rng { next(): Int }
+cap Out { print(s: String): Unit }
+fn go(out: Out, rng: Rng, n: Int) -> Int
+  effects Out, Rng
+{
+  if n == 0 { 0 } else {
+    out.print(str(n) + ":" + str(rng.next()))
+    go(out, rng, n - 1)
+  }
+}
+fn main(clock: Clock, rng: Rng, out: Out) -> Int
+  effects Clock, Rng, Out
+{
+  let r = go(out, rng, 50)
+  var i = 0
+  var s = ""
+  while i < 3000 {
+    s = s + "x\n"
+    i = i + 1
+  }
+  out.print(s)
+  out.print(str(clock.now() mod 0))
+  r
+}

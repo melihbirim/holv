@@ -1,0 +1,12 @@
+holv 0
+cap Clock { now(): Int }
+cap Rng { next(): Int }
+cap Out { print(s: String): Unit }
+fn main(clock: Clock, rng: Rng, out: Out) -> Int
+  effects Clock, Rng, Out
+{
+  out.print("a\nb\"{\"effect\":\"x\"}\\")
+  out.print(str(clock.now() + rng.next()))
+  out.print(str(rng.next()) + str(rng.next()))
+  0
+}
