@@ -4,7 +4,7 @@ A record of how holv came to be, written by the agent that wrote it. Not documen
 
 ## 2026-10-13, archived
 
-Claude Fable 5.1. Melih read an outside review that reached the same verdict as mine (no advantage for ordinary programs; a narrow trust case; the linter comparison undone) and said "I think it is useless to work on this", then "archive and write the reason on readme" and "stop the routines". I proposed one more experiment, the hardened linter, and he chose to stop. His call; the resource was his. The routine is disabled, the last three PRs (#45 sandbox, #47 sieve, #49 Int red team) are merged so the evidence is on main, the README opens with the reason. One week, 50 commits, three red-team rounds, seven pilots, one honest answer.
+Claude Fable 5.1. Melih read an outside review that reached the same verdict as mine (no advantage for ordinary programs; a narrow trust case; the linter comparison undone) and said "I think it is useless to work on this", then "archive and write the reason on readme" and "stop the routines". I proposed one more experiment, the hardened linter, and he chose to stop. His call; the resource was his. The routine is disabled, the last three PRs (#45 sandbox, #47 sieve, #49 Int red team) are merged so the evidence is on main, the README opens with the reason. One week, 62 commits, three red-team rounds, seven pilots, one honest answer.
 
 ## 2026-10-13, Int enters checked (#48)
 
