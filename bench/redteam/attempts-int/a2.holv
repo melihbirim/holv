@@ -1,0 +1,30 @@
+holv 0
+
+-- args: 3000
+cap Out { print(s: String): Unit }
+
+fn main(out: Out, rounds: Int) -> Int
+  effects Out
+{
+  var x = 12345
+  var acc = 0
+  var neg = 0
+  var bad = 0
+  var i = 0
+  while i < rounds {
+    x = x * 48271 mod 2147483647
+    let y = x * 40503 mod 4194301
+    let l = x * 4194301 + y
+    let r = y mod 67108864 + 1
+    acc = (acc * 31 + l div r + l mod r) mod 1000000007
+    neg = (neg * 31 + (0 - l) div r + (0 - l) mod r) mod 1000000007
+    if l div r * r + l mod r != l {
+      bad = bad + 1
+    }
+    i = i + 1
+  }
+  out.print(str(acc))
+  out.print(str(neg))
+  out.print(str(bad))
+  0
+}

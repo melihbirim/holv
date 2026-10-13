@@ -32,3 +32,18 @@ One bug with two faces, and both teams found the first face on their first attem
 Side findings, outside the guarantee: `x mod 0` printed `NaN` and `x div 0` printed `Infinity`, exit 0 (Sonnet, `b3`), which the spec's "nothing rounds or fails silently" forbade without a test; Big division by zero was a bare `RangeError`. Both are now `DivisionByZero` with a position. And a `.holv` outside any directory tree with a `"type": "module"` package.json failed with E090 (found while writing `c1` in a temp directory); the build directory now carries its own package.json.
 
 Not attacked, and stated: `--caps` wrappers (a `dry()` can lie by definition; `caps verify` and review are the defence), and an unpinned clock (divergence by design; the reviewer pins it). The round took about forty minutes of two models' time. Its finding would not have come out of any benchmark in `bench/evidence`: a correct program does not crash after an effect.
+
+## Round 3 (2026-10-13): Int
+
+Guarantee under attack: an `Int` result outside ±2^53 stops the program; nothing rounds or wraps silently. Five attempts (`attempts-int/a1`–`a5`, written by Sonnet 5.5 running as a scheduled routine, one model, not two as the issue asked) plus `c1`. `verify-int.mjs` runs each attempt for each `-- args:` line and compares stdout with `reference-int.py`, the exact arithmetic in Python integers (Float as IEEE doubles). VIOLATION: a line the exact arithmetic does not print, or a finished run where the exact arithmetic stops.
+
+| attempt | what | verdict |
+|---|---|---|
+| a1 | `main(n: Int)` given `9007199254740993`, `1.5`, `abc`, `1e300` | VIOLATION: argv is `Number(arg)`, unchecked; prints `9007199254740992`, `1.5`, `NaN`, `1e+300` as an Int |
+| a2 | 3000 rounds of `div`/`mod` on operands near 2^53, positive and negative, checking `q*r + m == l` | MATCH (also fuzzed 3M cases against BigInt) |
+| a3 | `(0 - n) mod n` is `-0`; `1.0 / toFloat(z)` | VIOLATION: prints `-Infinity`, exact is `Infinity`; `Int` has a negative zero |
+| a4 | `floor` of 2^53, 2^53-1, NaN, 1e300, negatives, `floor(sqrt(x))`, `floor(x * 1.5)` | MATCH (stops where exact arithmetic leaves the range) |
+| a5 | `--caps` wrapper whose `Int` method returns `2**60`, `1.5`, `NaN` | VIOLATION: cap results are not checked at the boundary; prints `1152921504606847000`, `1.5`, `NaN` |
+| c1 | `HOLV_NOW=9007199254740993`, `Clock.now()` | VIOLATION: the built-in Clock returns `Number(env)` unchecked |
+
+Three distinct holes, all at the edge where a JS number enters holv without passing `ck`: argv and the environment (a1, c1), cap results (a5), and `-0` produced by `mod`/`div`/`floor` (a3). Arithmetic inside the program (a2, a4) held. Reported as new soundness issues; not fixed here.

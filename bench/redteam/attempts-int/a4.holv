@@ -1,0 +1,20 @@
+holv 0
+
+-- args: 9007199254740991
+-- args: 9007199254740992
+-- args: 9007199254740990.5
+-- args: NaN
+-- args: 1e300
+-- args: -9007199254740991
+-- args: -4
+-- args: 9007199199250224
+cap Out { print(s: String): Unit }
+
+fn main(out: Out, x: Float) -> Int
+  effects Out
+{
+  out.print(str(floor(x)))
+  out.print(str(floor(sqrt(x))))
+  out.print(str(floor(x * 1.5)))
+  0
+}

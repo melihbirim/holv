@@ -1,0 +1,18 @@
+holv 0
+
+-- args: 0
+-- args: 1
+-- args: 2
+-- caps: a5.caps.ts
+cap Num { wide(): Int, frac(): Int, nan(): Int }
+
+cap Out { print(s: String): Unit }
+
+fn main(num: Num, out: Out, k: Int) -> Int
+  effects Num, Out
+{
+  let v = if k == 0 { num.wide() } else { if k == 1 { num.frac() } else { num.nan() } }
+  out.print(str(v))
+  out.print(str(v + 0))
+  0
+}

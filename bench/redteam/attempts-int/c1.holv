@@ -1,0 +1,13 @@
+holv 0
+
+-- env: HOLV_NOW=9007199254740993
+cap Clock { now(): Int }
+
+cap Out { print(s: String): Unit }
+
+fn main(clock: Clock, out: Out) -> Int
+  effects Clock, Out
+{
+  out.print(str(clock.now()))
+  0
+}

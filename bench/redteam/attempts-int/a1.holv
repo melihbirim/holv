@@ -1,0 +1,16 @@
+holv 0
+
+-- args: 9007199254740993
+-- args: 1.5
+-- args: abc
+-- args: 1e300
+-- args: 9007199254740991
+cap Out { print(s: String): Unit }
+
+fn main(out: Out, n: Int) -> Int
+  effects Out
+{
+  out.print(str(n))
+  out.print(str(n - 1))
+  0
+}
